@@ -2,6 +2,17 @@
 
 The betty file manager (bfm) is a terminal-based file manager designed to utilize [vim](https://github.com/neovim/neovim) (or other text-based editor) and [fzf](https://github.com/junegunn/fzf).  It was inspired by [nnn](https://github.com/jarun/nnn) but [differs](#nnn-comparison) in ways that make it faster to use (and a bit more dangerous too).
 
+# Installation
+
+Currently bfm can only be installed by cloning the repository, compiling, and manually installing.
+
+    git clone https://github.com/cskeeters/betty-file-manager.git --branch master --single-branch
+    cd betty-file-manager
+    go mod tidy
+    go build
+    cp bfm /usr/local/bin/
+    mkdir ~/.config/bfm
+    cp -rp plugins ~/.config/bfm
 
 # Usage
 
