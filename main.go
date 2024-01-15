@@ -193,8 +193,8 @@ var (
 
 	cursorColor = filterBgColor
 
-	symFolderColor = tabSelectedBgColor
-	folderColor = tabSelectedBgColor
+	symDirColor = tabSelectedBgColor
+	dirColor = tabSelectedBgColor
 
 	//Icon Colors
 	excelColor = lipgloss.AdaptiveColor{Light: "#000050", Dark: "#55a600"}
@@ -311,11 +311,11 @@ var (
 		Render
 
 	rDirectory = lipgloss.NewStyle().
-		Foreground(folderColor).
+		Foreground(dirColor).
 		Render
 
 	rSymDirectory = lipgloss.NewStyle().
-		Foreground(symFolderColor).
+		Foreground(symDirColor).
 		Render
 
 	rExcel = lipgloss.NewStyle().
@@ -695,7 +695,7 @@ func writeHelp(help string) {
 		log.Printf("Creating dirs: %s", dirPath)
 		err := os.MkdirAll(dirPath, 0755)
 		if err != nil {
-			log.Fatalf("Error creating parent folders for helpPath: %s (%s)", helpPath, err.Error())
+			log.Fatalf("Error creating parent directories for helpPath: %s (%s)", helpPath, err.Error())
 		}
 	}
 
@@ -1058,7 +1058,7 @@ func (m *model) MkDir() tea.Cmd {
 		log.Fatal(err)
 	}
 
-	if _, err := t.Write([]byte("NewFolder\n")); err != nil {
+	if _, err := t.Write([]byte("NewDirectory\n")); err != nil {
 		log.Fatal(err)
 	}
 
