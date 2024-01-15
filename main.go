@@ -158,6 +158,7 @@ func (a BySize) Less(i, j int) bool {
 
 
 var (
+	home string
 	helpPath string
 
 	subtleColor = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
@@ -1662,6 +1663,16 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func compressCWD(path string) string {
+
+	// One simple compression is to use ~ for home dir
+	if strings.HasPrefix(path,home) {
+		path = "~"+path[len(home):]
+	}
+
+	return path
+}
+
 func (m model) headerView() string {
 
 	doc := strings.Builder{}
@@ -1690,7 +1701,7 @@ func (m model) headerView() string {
 
 	tt := lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 
-	cwd := rCwd(m.CurrentTab.directory)
+	cwd := rCwd(compressCWD(m.CurrentTab.directory))
 	main := lipgloss.JoinHorizontal(lipgloss.Top, tt, rSubtle("   "), cwd)
 
 	fill := rSubtle(strings.Repeat(" ", max(0, m.termWidth-lipgloss.Width(main))))
@@ -2139,7 +2150,7 @@ func getStartDir(args []string) string {
 }
 
 func main() {
-	home := os.Getenv("HOME")
+	home = os.Getenv("HOME")
 	logpath := filepath.Join(home,".local/log/bfm.log")
 	helpPath = filepath.Join(home,".local/share/bfm/help.txt")
 
