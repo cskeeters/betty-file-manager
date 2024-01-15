@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -162,6 +163,7 @@ var (
 	helpPath string
 
 	subtleColor = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
+	cursorBgColor = subtleColor
 
 	headingBarBg = subtleColor
 	statusBarBg = subtleColor
@@ -177,8 +179,8 @@ var (
 
 	statusColor = lipgloss.AdaptiveColor{Light: "#0c0c0c", Dark: "#0c0c0c"}
 
-	whiteColor = lipgloss.AdaptiveColor{Light: "#FFF", Dark: "#DDD"}
-	brightWhiteColor = lipgloss.AdaptiveColor{Light: "#FFF", Dark: "#FFF"}
+	whiteColor = lipgloss.AdaptiveColor{Light: "#333", Dark: "#BBB"}
+	brightWhiteColor = lipgloss.AdaptiveColor{Light: "#000", Dark: "#FFF"}
 
 	commandBgColor = lipgloss.AdaptiveColor{Light: "#b341e7", Dark: "#b341e7"}
 	filterBgColor = lipgloss.AdaptiveColor{Light: "#ff4d86", Dark: "#ff4d86"}
@@ -226,14 +228,12 @@ var (
 		Background(subtleColor).
 		Render
 
-	rCursor = lipgloss.NewStyle().
-		Foreground(cursorColor).
-		Render
+	cursorStyle = lipgloss.NewStyle().
+		Foreground(cursorColor)
 
-	rSelected = lipgloss.NewStyle().
-		Foreground(whiteColor).
-		Background(selectedBgColor).
-		Render
+	selected = lipgloss.NewStyle().
+		Foreground(brightWhiteColor).
+		Background(selectedBgColor)
 
 	rTabSelected = lipgloss.NewStyle().
 		Foreground(whiteColor).
@@ -311,31 +311,48 @@ var (
 		Padding(0, 1).
 		Render
 
-	rDirectory = lipgloss.NewStyle().
-		Foreground(dirColor).
-		Render
+	directory = lipgloss.NewStyle().
+		Foreground(dirColor)
 
-	rSymDirectory = lipgloss.NewStyle().
-		Foreground(symDirColor).
-		Render
+	symDirectory = lipgloss.NewStyle().
+		Foreground(symDirColor)
 
-	rExcel = lipgloss.NewStyle().
-		Foreground(excelColor).
-		Render
+	excel = lipgloss.NewStyle().
+		Foreground(excelColor)
 
-	rDoc = lipgloss.NewStyle().
-		Foreground(docColor).
-		Render
+	wordDoc = lipgloss.NewStyle().
+		Foreground(docColor)
 
-	rPDF = lipgloss.NewStyle().
-		Foreground(pdfColor).
-		Render
+	pdf = lipgloss.NewStyle().
+		Foreground(pdfColor)
 
-	rFileDefault = lipgloss.NewStyle().
-		Foreground(whiteColor).
-		Render
+	fileDefault = lipgloss.NewStyle().
+		Foreground(whiteColor)
 
+	// For file modification time
+	hourStyle = lipgloss.NewStyle().
+		Foreground(helpBgColor)
+	dayStyle = lipgloss.NewStyle().
+		Foreground(helpBgColor)
+	weekStyle = lipgloss.NewStyle().
+		Foreground(sortBgColor)
+	monthStyle = lipgloss.NewStyle().
+		Foreground(brightWhiteColor)
+	yearStyle = lipgloss.NewStyle().
+		Foreground(whiteColor)
 
+	// For file size
+	byteStyle = lipgloss.NewStyle().
+		Foreground(whiteColor)
+
+	kByteStyle = lipgloss.NewStyle().
+		Foreground(brightWhiteColor)
+
+	mByteStyle = lipgloss.NewStyle().
+		Foreground(sortBgColor)
+
+	gByteStyle = lipgloss.NewStyle().
+		Foreground(helpBgColor)
 )
 
 func min(a, b int) int {
@@ -1974,6 +1991,22 @@ func GetSize(f fs.DirEntry) string {
 	return fmt.Sprintf("%4dB", b)
 }
 
+func truncateFileName(name string, maxNameWidth int) string {
+	if len(name) <= maxNameWidth {
+		return name
+	}
+
+	ellipsis := "... "
+
+	// Need to loose some characters
+	dotIndex := strings.LastIndex(name, ".")
+
+	end := ellipsis+name[dotIndex:]
+	startKeepAmt := maxNameWidth - len(end)
+	start := name[0:startKeepAmt]
+	return start+end
+}
+
 // Populates the viewport with data from the current tab
 // Indicates which files are selected
 func (m *model) generateContent() string {
@@ -1986,35 +2019,78 @@ func (m *model) generateContent() string {
 	doc := strings.Builder{}
 
 	for i, f := range ct.filteredFiles {
+		cursorText := "  "
+		if i == ct.cursor {
+			cursorText = "> "
+		}
+
 		icon := getIcon(ct.absdir, f)
 		mod := GetModified(f)
 		siz := GetSize(f)
-		nameWidth := m.termWidth - 1 - 6 - 6
-		formatStr := fmt.Sprintf("%%s %%-%ds %%s %%s", nameWidth)
-		text := fmt.Sprintf(formatStr, icon, f.Name(), mod, siz)
+
+		// Cursor:2 Icon:2, Mod:2, Size:6
+		maxNameWidth := m.termWidth - 2 - 2 - 6 - 6
+
+		name := truncateFileName(f.Name(), maxNameWidth)
+		nameWidth := len(name)
+		spaceWidth := maxNameWidth - nameWidth
+
+		text := fmt.Sprintf("%s %-"+strconv.Itoa(nameWidth)+"s", icon, name)
+		space := fmt.Sprintf("%"+strconv.Itoa(spaceWidth)+"s", " ")
+
+		fileStyle := fileDefault
+		if f.IsDir() {
+			fileStyle = directory
+		} else if isSymDir(ct.absdir, f) {
+			fileStyle = symDirectory
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),"xlsx") {
+			fileStyle = excel
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),"docx") {
+			fileStyle = wordDoc
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),"pdf") {
+			fileStyle = pdf
+		}
+
+		spaceStyle := fileDefault
+
+		sizeStyle := byteStyle
+		if strings.HasSuffix(siz, "K") {
+			sizeStyle = kByteStyle
+		} else if strings.HasSuffix(siz, "M") {
+			sizeStyle = mByteStyle
+		} else if strings.HasSuffix(siz, "G") {
+			sizeStyle = gByteStyle
+		}
+
+		modStyle := hourStyle
+		if strings.HasSuffix(mod, "d") {
+			modStyle = dayStyle
+		} else if strings.HasSuffix(mod, "w") {
+			modStyle = weekStyle
+		} else if strings.HasSuffix(mod, "m") {
+			modStyle = monthStyle
+		} else if strings.HasSuffix(mod, "y") {
+			modStyle = yearStyle
+		}
 
 		if i == ct.cursor {
-			log.Printf("Drawing cursor at %d", i)
-			doc.WriteString(rCursor("> "))
-		}else {
-			doc.WriteString("  ")
+			fileStyle = fileStyle.Copy().Background(cursorBgColor)
+			spaceStyle = spaceStyle.Copy().Background(cursorBgColor)
+			sizeStyle = sizeStyle.Copy().Background(cursorBgColor)
+			modStyle = modStyle.Copy().Background(cursorBgColor)
 		}
 
+		// Override if selected
 		if m.Selected(ct.absdir, f) != -1 {
-			doc.WriteString(rSelected(text)+"\n")
-		} else if f.IsDir() {
-			doc.WriteString(rDirectory(text)+"\n")
-		} else if isSymDir(ct.absdir, f) {
-			doc.WriteString(rSymDirectory(text)+"\n")
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"xlsx") {
-			doc.WriteString(rExcel(text)+"\n")
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"docx") {
-			doc.WriteString(rDoc(text)+"\n")
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"pdf") {
-			doc.WriteString(rPDF(text)+"\n")
-		} else {
-			doc.WriteString(rFileDefault(text)+"\n")
+			fileStyle = selected
 		}
+
+		doc.WriteString(cursorStyle.Render(cursorText)) // 2 characters
+		doc.WriteString(fileStyle.Render(text))
+		doc.WriteString(spaceStyle.Render(space))
+		doc.WriteString(modStyle.Render(fmt.Sprintf(" %5s", mod))) // 6 characters
+		doc.WriteString(sizeStyle.Render(fmt.Sprintf(" %5s", siz))) // 6 characters
+		doc.WriteString("\n")
 	}
 
 	return doc.String()
