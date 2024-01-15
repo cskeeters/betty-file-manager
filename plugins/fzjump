@@ -1,0 +1,40 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+if ! type fzf >/dev/null 2>&1; then
+    printf "fzf missing"
+    read -r _
+    exit 1
+fi
+
+# cd to dir of the current tab so options will be sub-files
+cd "$CUR_DIR"
+
+# fzf by itself will only search files.  This will search folders and files
+if type fd > /dev/null 2>&1; then
+    sel=$(fd --color=always | fzf --ansi)
+else
+    sel=$(find * -print | fzf)
+fi
+
+if [ -n "$sel" ]; then
+    if [ "$sel" = "." ] || { ! [ -d "$sel" ] && ! [ -f "$sel" ]; }; then
+        exit 0
+    fi
+
+    if [ -f "$sel" ]; then
+        # File, cd to parent, then jump cursor to file
+        DIRNAME=$(dirname "$sel") # this will return . when selected file is in the current dir
+        BASENAME=$(basename "$sel")
+        if [ "$DIRNAME" != "." ]; then # Don't cd to "."
+            echo "cd $CUR_DIR/$DIRNAME" >> "$CMD_FILE"
+        fi
+        echo "select $BASENAME" >> "$CMD_FILE"
+    else
+        # directory
+        echo "cd $CUR_DIR/$sel" >> "$CMD_FILE"
+    fi
+fi

@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+echo $CUR_DIR
+echo $HOVERED_FILE
+
+$TARGET_DIR = "/"
+
+if [ -n "$TARGET_DIR" ]; then
+    if [ "$TARGET_DIR" = "." ] || { ! [ -d "$TARGET_DIR" ] && ! [ -f "$TARGET_DIR" ]; }; then
+        exit 0
+    fi
+
+    # No need to escape spaces as bfm knows there is only one argument to cd
+    echo "cd $TARGET_DIR" >> "$CMD_FILE"
+fi

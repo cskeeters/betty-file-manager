@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+# echo $STATE_FILE
+# echo $CMD_FILE
+
+if ! type fzf >/dev/null 2>&1; then
+    printf "fzf missing"
+    read -r _
+    exit 1
+fi
+
+# cd to dir of the current tab so that autojump will esclude where we are
+cd "$CUR_DIR"
+
+ARG=$(gum input --prompt="Autojump>" --placeholder="dotfiles" --cursor.foreground="#F4AC45" --prompt.foreground="#04B575" --header="Betty File Manager" --header.foreground="#AAF")
+if [[ $? != 0 ]]; then
+    exit
+fi
+
+if [[ $1 == "FZF" ]]; then
+    sel=$(autojump --complete "$ARG" | sed -nre 's/.*__.__(.*)/\1/p' | fzf)
+else
+    sel=$(autojump "$ARG")
+fi
+
+if [ -n "$sel" ]; then
+    if [ "$sel" = "." ] || { ! [ -d "$sel" ] && ! [ -f "$sel" ]; }; then
+        exit 0
+    fi
+
+    echo "cd $sel" >> "$CMD_FILE"
+fi
