@@ -1,0 +1,9 @@
+/tmp/chad	Home
+/tmp/chad/Documents	Documents
+/tmp/chad/Downloads	Downloads
+/tmp/chad/Pictures	Pictures
+/tmp/chad/betty-file-manager	bfm
+/tmp/chad/dotfiles	Dotfiles
+/tmp/chad/.config/nvim	nvim config
+/tmp/chad/.local/share/nvim/lazy	nvim plugins
+/opt/homebrew/Cellar/neovim/0.9.4/share/nvim/runtime	nvim runtime

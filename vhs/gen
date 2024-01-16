@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# VHS=$(dirname $0)
+VHS="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+echo "$VHS"
+
+rm -rf /tmp/chad
+cp -rp chad /tmp
+cp -rp ../../betty-file-manager /tmp/chad/
+mkdir -p /tmp/chad/Documents
+touch "/tmp/chad/Documents/2023 Marketing Material.pptx"
+touch "/tmp/chad/Documents/2023 Business Plan.docx"
+touch "/tmp/chad/Documents/2023 ideas.txt"
+mkdir -p /tmp/chad/Pictures
+mkdir -p /tmp/chad/.config/bfm
+cp -rp ~/.config/bfm/plugins /tmp/chad/.config/bfm
+
+export HOME=/tmp/chad
+cd "$HOME"
+
+# Colors may appear weird in neovim if TERM_PROGRAM is set
+unset TERM
+unset TERM_PROGRAM
+unset TERM_PROGRAM_VERSION
+
+# export VHS_NO_SANDBOX=true
+export PROMPT_COMMAND='__prompt_cmd'
+
+TAPE="$VHS/${1:-bfm-jump.tape}"
+OUTPUT=$(sed -nre 's/^Output (.*)/\1/p' "$TAPE")
+echo "Found output: $OUTPUT"
+vhs "$TAPE" || exit
+mv "$OUTPUT" "$VHS"
+cd $VHS
+# This will open webm or gif
+open -n /Applications/Google\ Chrome.app --args "file://$VHS/$OUTPUT"
