@@ -21,7 +21,7 @@ Currently bfm can only be installed by cloning the repository, compiling, and ma
 
 bfm starts with tab one of six active in the current directory.  Pressing a number selects (and activates) a tab.  If the tab pas not previously active, it will start and the same directory as the previous tab.  When you close a tab, the previously selected tab will be re-selected.
 
-![Tabs Preview (Made with VHS)](https://vhs.charm.sh/vhs-6aNxl76UPMFnjPFbwQ3ARM.gif)
+![Tabs Preview (Made with VHS)](https://vhs.charm.sh/vhs-5fScAGgpAGctmMNEXOIv8e.gif)
 
 ## Jump Stack
 
@@ -32,6 +32,7 @@ Each tab remembers all of the directories which were previously displayed.  I ca
 
 A file is added to the selection list by pressing <kbd>s</kbd>.  The selection list can contain files from desperate folders.  View the selection list with <kbd>Ctrl</kbd>+<kbd>s</kbd>.
 
+![Selection Preview (Made with VHS)](https://vhs.charm.sh/vhs-DOgYHRe7HPh22L7PFHAlD.gif)
 
 ## FZF
 
@@ -41,11 +42,13 @@ bfm is designed to be used with fzf which is called in bash plugins.  bfm comes 
 * Select a directory from a list of commonly used paths and `cd` the current tab to it. (<kbd>a</kbd>)
 * Choose the desired directory after inputting string for autojump (<kbd>Ctrl</kbd>+<kbd>j</kbd>)
 
+![FZF Preview (Made with VHS)](https://vhs.charm.sh/vhs-3muGozSmbxa1x0nQQHBEKv.gif)
 
 ## Autojump
 
 [autojump](https://github.com/wting/autojump) tracks directory usage.  It allows the user to input a small string and guesses the indented directory.  For example `$ j bet` changes directory to `~/working/betty-file-manager` for me.  From inside bfm, press <kbd>J</kbd> to input the parameter for j and the current tab will change to the directory returned by autojump.
 
+![Autojump Preview (Made with VHS)](https://vhs.charm.sh/vhs-49eGz3Qybhy8Y6JQkRmHgv.gif)
 
 ## Renaming with EDITOR
 
@@ -55,6 +58,7 @@ bfm utilizes vim for the user input when renaming a file, or bulk renaming all o
 
 Save and quite to rename, :cq to cancel.  (Based on return value)
 
+![Rename Preview (Made with VHS)](https://vhs.charm.sh/vhs-1Jtc1KXzn3cL5oAOR4Kp64.gif)
 
 ## CD on Close
 
