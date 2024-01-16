@@ -29,7 +29,6 @@ import (
 	"golang.org/x/term"
 )
 
-// FIXME
 const (
 	commandMode = iota
 	filterMode = iota
@@ -469,9 +468,6 @@ func (m *model) handleResize(msg tea.WindowSizeMsg) {
 	}
 	m.viewport.SetContent(m.generateContent())
 
-	//FIXME
-	log.Printf("YOffset: %d", m.viewport.YOffset)
-
 	// viewport must be resetting YOffset on window resize somehow
 	// We'll manually match and rescroll
 	m.checkScrollDown()
@@ -629,9 +625,6 @@ func (m *model) MoveCursor(linesDown int) {
 	} else {
 		m.checkScrollUp()
 	}
-
-	//FIXME
-	log.Printf("YOffset: %d", m.viewport.YOffset)
 }
 
 func (m *model) MoveCursorTop() {
@@ -1603,7 +1596,6 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return m, m.GoHistoryForward()
 			}
 			m.viewport.SetContent(m.generateContent())
-			//m.checkScrollDown() //FIXME is this correct?
 		}
 
 		if m.mode == filterMode {
