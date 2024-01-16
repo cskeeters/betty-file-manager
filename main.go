@@ -1988,12 +1988,17 @@ func truncateFileName(name string, maxNameWidth int) string {
 		return name
 	}
 
-	ellipsis := "... "
-
 	// Need to loose some characters
-	dotIndex := strings.LastIndex(name, ".")
 
-	end := ellipsis+name[dotIndex:]
+	ellipsis := "..."
+	end := ellipsis
+
+	dotIndex := strings.LastIndex(name, ".")
+	if dotIndex > 0 {
+		// put elipsis before file extension
+		end = ellipsis+" "+name[dotIndex:]
+	}
+
 	startKeepAmt := maxNameWidth - len(end)
 	start := name[0:startKeepAmt]
 	return start+end
@@ -2010,6 +2015,12 @@ func (m *model) generateContent() string {
 	ct := m.CurrentTab
 	doc := strings.Builder{}
 
+	// full makes this a responsive design
+	full := true
+	if m.termWidth < 50 { // Cutoff for displaying mod and size fields
+		full = false
+	}
+
 	for i, f := range ct.filteredFiles {
 		cursorText := "  "
 		if i == ct.cursor {
@@ -2017,18 +2028,28 @@ func (m *model) generateContent() string {
 		}
 
 		icon := getIcon(ct.absdir, f)
-		mod := GetModified(f)
-		siz := GetSize(f)
+
+		mod := "0d" // won't display
+		siz := "0K" // won't display
+		if full {
+			mod = GetModified(f)
+			siz = GetSize(f)
+		}
 
 		// Cursor:2 Icon:2, Mod:2, Size:6
-		maxNameWidth := m.termWidth - 2 - 2 - 6 - 6
-
+		maxNameWidth := m.termWidth - 2 - 2
+		if full {
+			maxNameWidth = maxNameWidth - 6 - 6
+		}
 		name := truncateFileName(f.Name(), maxNameWidth)
 		nameWidth := len(name)
 		spaceWidth := maxNameWidth - nameWidth
 
 		text := fmt.Sprintf("%s %-"+strconv.Itoa(nameWidth)+"s", icon, name)
-		space := fmt.Sprintf("%"+strconv.Itoa(spaceWidth)+"s", " ")
+		space := ""
+		if spaceWidth > 0 {
+			space = fmt.Sprintf("%"+strconv.Itoa(spaceWidth)+"s", " ")
+		}
 
 		fileStyle := fileDefault
 		if f.IsDir() {
@@ -2079,9 +2100,11 @@ func (m *model) generateContent() string {
 
 		doc.WriteString(cursorStyle.Render(cursorText)) // 2 characters
 		doc.WriteString(fileStyle.Render(text))
-		doc.WriteString(spaceStyle.Render(space))
-		doc.WriteString(modStyle.Render(fmt.Sprintf(" %5s", mod))) // 6 characters
-		doc.WriteString(sizeStyle.Render(fmt.Sprintf(" %5s", siz))) // 6 characters
+		if full {
+			doc.WriteString(spaceStyle.Render(space))
+			doc.WriteString(modStyle.Render(fmt.Sprintf(" %5s", mod))) // 6 characters
+			doc.WriteString(sizeStyle.Render(fmt.Sprintf(" %5s", siz))) // 6 characters
+		}
 		doc.WriteString("\n")
 	}
 
