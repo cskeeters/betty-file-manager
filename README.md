@@ -21,7 +21,7 @@ Currently bfm can only be installed by cloning the repository, compiling, and ma
 
 bfm starts with tab one of six active in the current directory.  Pressing a number selects (and activates) a tab.  If the tab pas not previously active, it will start and the same directory as the previous tab.  When you close a tab, the previously selected tab will be re-selected.
 
-![Tabs Preview](https://i.imgur.com/rxxsUGR.mp4)
+![Tabs Preview (Made with VHS)](https://vhs.charm.sh/vhs-6aNxl76UPMFnjPFbwQ3ARM.gif)
 
 ## Jump Stack
 
