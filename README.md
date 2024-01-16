@@ -44,6 +44,15 @@ bfm is designed to be used with fzf which is called in bash plugins.  bfm comes 
 
 ![FZF Preview (Made with VHS)](https://vhs.charm.sh/vhs-3muGozSmbxa1x0nQQHBEKv.gif)
 
+### Commonly Used Paths
+
+To have <kbd>a</kbd> provide a list of paths from which to select in fzf, create a text file `~/.paths`.  Each line should have a full path, a tab character, then a description used for filtering that can contain spaces.
+
+    /home/chad/Downloads	Downloads
+    /home/chad/Documents	Documents
+
+NOTE: This can be used [from bash too](https://github.com/cskeeters/dotfiles/blob/566e62aa41323202677a30d5864748d692a4e339/shell/bashrc#L95).
+
 ## Autojump
 
 [autojump](https://github.com/wting/autojump) tracks directory usage.  It allows the user to input a small string and guesses the indented directory.  For example `$ j bet` changes directory to `~/working/betty-file-manager` for me.  From inside bfm, press <kbd>J</kbd> to input the parameter for j and the current tab will change to the directory returned by autojump.
