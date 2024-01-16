@@ -98,6 +98,8 @@ Shell configuration for tmux:
 
 Opening a shell will also be done in a separate tmux window if bfm is launched inside a tmux session
 
+![TMUX Preview (Made with VHS)](https://vhs.charm.sh/vhs-5yPDnTr87ZUGROEdQfo0iv.gif)
+
 
 ## Trashing Files
 
