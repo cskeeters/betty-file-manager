@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -94,7 +95,7 @@ type model struct {
 type cdMsg string
 type selectFileMsg string
 type tabMsg int
-type runFinishedMsg struct{ cmd string; err error }
+type runFinishedMsg struct{ errok bool; cmd string; args []string; err error; stderr bytes.Buffer}
 type runPluginFinishedMsg struct{ pluginpath string; statepath, cmdpath string; err error }
 type refreshMsg int
 type errorMsg error
@@ -688,12 +689,59 @@ func (m *model) MovePrevSelected() {
 }
 
 // Supports edit, open, trash
-func Run(dir, cmd string, args ...string) tea.Cmd {
+func Run(errok bool, dir, cmd string, args ...string) tea.Cmd {
+	var stderr bytes.Buffer
 	c := exec.Command(cmd, args...) //nolint:gosec
 	c.Dir = dir
+	c.Stderr = &stderr
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return runFinishedMsg{cmd, err}
+		return runFinishedMsg{errok, cmd, args, err, stderr}
 	})
+}
+
+func FullCommand(cmd string, args []string) string {
+	doc := strings.Builder{}
+	doc.WriteString(cmd+" ")
+	for _, arg := range args {
+		doc.WriteString(arg+" ")
+	}
+	return doc.String()
+}
+
+func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
+
+	tmpdir := os.Getenv("TMPDIR")
+
+	t, err := os.CreateTemp(tmpdir, "M-ERROR-")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	full_command := FullCommand(msg.cmd, msg.args)
+
+	log.Printf("Error running: %s", full_command)
+
+	log.Printf("Created TMP File: %s", t.Name())
+
+	fwriteln(t, "Error running:\n")
+	fwriteln(t, "  "+full_command)
+	fwriteln(t, "")
+	
+	fwriteln(t, "STDERR:")
+
+	line, err := msg.stderr.ReadString('\n')
+	for err == nil {
+		fwriteln(t, "  "+line)
+		line, err = msg.stderr.ReadString('\n')
+	}
+
+	err = t.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Set errok so there is no infinite loop if less isn't installed
+	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
 }
 
 func ClearLastd() {
@@ -708,6 +756,13 @@ func (m *model) writeLastd() {
 	
 	d1 := []byte(ct.directory)
 	err := os.WriteFile(filepath.Join(home,".local", "state", "bfm.lastd"), d1, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func fwrite(f *os.File, line string) {
+	_, err := f.Write([]byte(line))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -1423,9 +1478,8 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case runFinishedMsg:
-		if msg.err != nil {
-			log.Printf("error running %s: %s", msg.cmd, msg.err)
-			return m, tea.Quit
+		if !msg.errok && msg.err != nil {
+			return m, m.HandleRunError(msg)
 		}
 		return m.handleRefresh()
 
@@ -1528,30 +1582,30 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "e":
 				if os.Getenv("TMUX") != "" {
 					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
-					return m, Run(ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
+					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
 				} else {
-					return m, Run(ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
+					return m, Run(false, ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
 				}
 			case "ctrl+n": // This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
-				return m, Run(ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
+				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
 			case "o":
 				// User may need to define an alias open for linux
-				return m, Run(ct.directory, "open", ct.filteredFiles[ct.cursor].Name())
+				return m, Run(false, ct.directory, "open", ct.filteredFiles[ct.cursor].Name())
 			case "S":
 				if os.Getenv("TMUX") != "" {
-					return m, Run(ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
+					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
 				} else {
 					home := os.Getenv("HOME")
 					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
 				}
 			case "V":
-				return m, Run(ct.directory, "nvim")
+				return m, Run(false, ct.directory, "nvim")
 			case "F":
 				// User may need to define an alias open for linux
-				return m, Run(ct.directory, "open", ct.directory)
+				return m, Run(false, ct.directory, "open", ct.directory)
 			case "T":
 				// https://github.com/morgant/tools-osx
-				return m, Run(ct.directory, "trash", ct.filteredFiles[ct.cursor].Name())
+				return m, Run(false, ct.directory, "trash", ct.filteredFiles[ct.cursor].Name())
 			case "X":
 				return m, m.RemoveFiles()
 			case "D":
@@ -1584,7 +1638,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "?":
 				// -I Case-Insensitive Searching
 				// -R Raw characters (for color support in terminals)
-				return m, Run(ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
+				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
 
 			// Sorting
 
