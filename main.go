@@ -696,6 +696,13 @@ func Run(dir, cmd string, args ...string) tea.Cmd {
 	})
 }
 
+func ClearLastd() {
+	err := os.Remove(filepath.Join(home,".local", "state", "bfm.lastd"))
+	if err != nil {
+		log.Printf("Error removing bfm.lastd: "+err.Error())
+	}
+}
+
 func (m *model) writeLastd() {
 	ct := m.CurrentTab
 	
@@ -2275,6 +2282,9 @@ func main() {
 	home = os.Getenv("HOME")
 	logpath := filepath.Join(home,".local/log/bfm.log")
 	helpPath = filepath.Join(home,".local/share/bfm/help.txt")
+
+	// we only want the lastd file to be valid if we exit cleanly
+	ClearLastd()
 
 	LoadConfig()
 
