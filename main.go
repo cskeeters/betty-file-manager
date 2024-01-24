@@ -1832,7 +1832,7 @@ func (m model) footerView() string {
 
 
 	doc.WriteString(footer)
-	return fmt.Sprintf(doc.String())
+	return doc.String()
 }
 
 func buildPattern(filter string) string {
