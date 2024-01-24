@@ -1545,18 +1545,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
 				}
 			case "V":
-				// User may need to define an alias open for linux
-				c := exec.Command("nvim") //nolint:gosec
-				c.Dir = ct.directory
-				return m, tea.ExecProcess(c, func(err error) tea.Msg {
-					return runFinishedMsg{"nvim", err}
-				})
+				return m, Run(ct.directory, "nvim")
 			case "F":
 				// User may need to define an alias open for linux
-				c := exec.Command("open", ct.directory) //nolint:gosec
-				return m, tea.ExecProcess(c, func(err error) tea.Msg {
-					return runFinishedMsg{"open", err}
-				})
+				return m, Run(ct.directory, "open", ct.directory)
 			case "T":
 				// https://github.com/morgant/tools-osx
 				return m, Run(ct.directory, "trash", ct.filteredFiles[ct.cursor].Name())
