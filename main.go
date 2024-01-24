@@ -700,7 +700,6 @@ func (m *model) writeLastd() {
 	ct := m.CurrentTab
 	
 	d1 := []byte(ct.directory)
-	home := os.Getenv("HOME")
 	err := os.WriteFile(filepath.Join(home,".local", "state", "bfm.lastd"), d1, 0644)
 	if err != nil {
 		log.Fatal(err)
