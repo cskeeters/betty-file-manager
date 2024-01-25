@@ -27,7 +27,19 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
+	"github.com/BurntSushi/toml"
 )
+
+
+type Config struct {
+	WdReplacement    []WdReplacement
+}
+
+type WdReplacement struct {
+	Real string
+	Repl string
+}
+
 
 const (
 	commandMode = iota
@@ -160,6 +172,8 @@ func (a BySize) Less(i, j int) bool {
 var (
 	home string
 	helpPath string
+
+	config Config
 
 	subtleColor = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 	cursorBgColor = subtleColor
@@ -1679,6 +1693,11 @@ func compressCWD(path string) string {
 		path = "~"+path[len(home):]
 	}
 
+	// Replace strings specified in bfmrc (to reduce working directory length)
+	for _, wdr := range config.WdReplacement {
+		path = strings.Replace(path, wdr.Real, wdr.Repl, 1)
+	}
+
 	return path
 }
 
@@ -2240,10 +2259,25 @@ func getStartDir(args []string) string {
 	return curDir
 }
 
+func LoadConfig() {
+	configPath := filepath.Join(home,".config/bfm/bfmrc")
+	if _, err := os.Stat(configPath); err != nil {
+		log.Print("Could not find bfmrc")
+		return
+	}
+
+	_, err := toml.DecodeFile(configPath, &config)
+	if err != nil {
+		log.Print("Error parsing bfmrc")
+	}
+}
+
 func main() {
 	home = os.Getenv("HOME")
 	logpath := filepath.Join(home,".local/log/bfm.log")
 	helpPath = filepath.Join(home,".local/share/bfm/help.txt")
+
+	LoadConfig()
 
 	writeHelp(generateHelp())
 

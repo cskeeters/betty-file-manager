@@ -230,3 +230,18 @@ Command              | Description
 `cd <path>`          | changes directory to the path specified
 `select <filename>`  | moves the cursor to a file matching filename
 `refresh`            | refresh the current tab
+
+
+# Shortening Working Direcotory Path
+
+MacOS decided that folders that sync to Dropbox or OneDrive should live in ~/Library/CloudStorage/XXX.  This makes the file paths unnecessary long.  bfm supports simple string replacements for long paths to ensure that you can see the part of the path you need even when the window is small.
+
+Create `~/.config/bfm/bfmrc`
+
+    [[WdReplacement]]
+    real = "Library/CloudStorage/OneDrive-CompanyName"
+    repl = "=OneDrive="
+
+    [[WdReplacement]]
+    real = "Library/CloudStorage/OneDrive-SharedLibraries-CompanyName"
+    repl = "=OneDrive Shared="
