@@ -205,7 +205,7 @@ Bubbletea provides an event loop framework for TUI.  Each time an event occurs (
 
 ## Term
 
-*term* is mainly used to get the width and height of the terminal.  When the window is resized, `Update` is passed a `tea.WindowSizeMsg` which requeries the terminal width and height so that a screen customized to the current dimentions can be drawn by `View`.
+*term* is mainly used to get the width and height of the terminal.  When the window is resized, `Update` is passed a `tea.WindowSizeMsg` which requires the terminal width and height so that a screen customized to the current dimensions can be drawn by `View`.
 
 ## Logging
 
@@ -232,7 +232,7 @@ Command              | Description
 `refresh`            | refresh the current tab
 
 
-# Shortening Working Direcotory Path
+# Shortening Working Directory Path
 
 MacOS decided that folders that sync to Dropbox or OneDrive should live in ~/Library/CloudStorage/XXX.  This makes the file paths unnecessary long.  bfm supports simple string replacements for long paths to ensure that you can see the part of the path you need even when the window is small.
 
