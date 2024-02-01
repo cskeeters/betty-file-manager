@@ -1130,7 +1130,12 @@ func (m *model) DuplicateFile() tea.Cmd {
 
 	c := exec.Command(Editor(), t.Name()) //nolint:gosec
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return duplicateFinishedMsg(t.Name())
+		if (err == nil) {
+			return duplicateFinishedMsg(t.Name())
+		} else {
+			log.Printf("User cancelled duplicate with cq")
+			return refresh()
+		}
 	})
 }
 
