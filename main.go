@@ -964,6 +964,40 @@ func RemoveFile(path string) error {
 	return c.Run()
 }
 
+func TrashFile(path string) error {
+	log.Printf("Trashing %s", path)
+	c := exec.Command("trash", "--", path) //nolint:gosec
+	return c.Run()
+}
+
+func (m *model) TrashFiles() tea.Cmd {
+	if len(m.selectedFiles) == 0 {
+		ct := m.CurrentTab
+		file := ct.filteredFiles[ct.cursor]
+		path := filepath.Join(ct.absdir, file.Name())
+		err := TrashFile(path)
+		if err != nil {
+			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
+		} else {
+			return refresh()
+		}
+	}
+
+	for _, sf := range(m.selectedFiles) {
+		path := filepath.Join(sf.directory, sf.file.Name())
+		err := TrashFile(path)
+		if err != nil {
+			// Stop on first error
+			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
+		}
+	}
+
+	m.ClearSelections()
+
+	return refresh()
+}
+
+
 func (m *model) RemoveFiles() tea.Cmd {
 	if len(m.selectedFiles) == 0 {
 		ct := m.CurrentTab
@@ -1610,7 +1644,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return m, Run(false, ct.directory, "open", ct.directory)
 			case "T":
 				// https://github.com/morgant/tools-osx
-				return m, Run(false, ct.directory, "trash", ct.filteredFiles[ct.cursor].Name())
+				return m, m.TrashFiles()
 			case "X":
 				return m, m.RemoveFiles()
 			case "D":
