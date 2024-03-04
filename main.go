@@ -136,10 +136,12 @@ func (a ByMod) Less(i, j int) bool {
 	iinfo, err := a[i].Info()
 	if err != nil {
 		log.Printf("Error getting ModTime of %s: %s", a[i].Name(), err)
+		return true
 	}
 	jinfo, err := a[j].Info()
 	if err != nil {
 		log.Printf("Error getting ModTime of %s: %s", a[j].Name(), err)
+		return false
 	}
 	// Last Modified First
 	return iinfo.ModTime().After(jinfo.ModTime())
