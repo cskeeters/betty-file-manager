@@ -1694,9 +1694,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.viewport.GotoTop()
 
 			case "ctrl+l":
-				ct.SetFilter("")
-				m.viewport.GotoTop()
-				return m, refresh()
+				// Don't use SetFilter, because we don't need to re-sort before we refresh
+				ct.filter = ""
+				//m.viewport.GotoTop()
+				return m.handleRefresh()
 			case "ctrl+o":
 				return m, m.GoHistoryBack()
 			case "tab": // "ctrl+i" issues tab
