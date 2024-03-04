@@ -1474,6 +1474,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("d")),      d("Deselect All Files")))
 	doc.WriteString(f("    %s - %s\n", p(k("e")),      d("Edit file (with EDITOR environment variable)")))
 	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file (with open command/alias)")))
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+n")), d("Cat the file to dev null to trigger OneDrive sync")))
 	doc.WriteString(f("    %s - %s\n", p(k("T")),      d("Trash file (with open command/alias)")))
 	doc.WriteString(f("    %s - %s\n", p(k("X")),      d("Remove selected or hovered file(s)/directory(s) (with rm -rf command)")))
 	doc.WriteString(f("    %s - %s\n", p(k("D")),      d("Duplicate file")))
