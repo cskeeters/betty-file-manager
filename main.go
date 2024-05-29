@@ -90,6 +90,9 @@ type model struct {
 	tabs []tabData
 	tabHistory []int
 	selectedFiles []selectedFile
+
+	// If an error has occurred, add to this slice and it will present it to the user
+	errors []string
 }
 
 type cdMsg string
@@ -1552,6 +1555,15 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleRefresh()
 
 	case tea.KeyMsg:
+		// Having errors is like it's own mode
+		// Any key will clear one error
+		if len(m.errors) > 0 {
+			// trash first error
+			m.errors = m.errors[1:]
+
+			return m, refresh()
+		}
+
 		if m.mode == commandMode {
 			log.Printf("DEBUG: Key %s", msg.String())
 			switch msg.String() {
@@ -2241,6 +2253,11 @@ func (m model) View() string {
 	if !m.firstResize {
 		return "\n  Initializing..."
 	}
+
+	if len(m.errors) > 0 {
+		return m.errors[0]
+	}
+
 	return fmt.Sprintf("%s\n%s\n%s", m.headerView(), m.viewport.View(), m.footerView())
 }
 
