@@ -2109,8 +2109,13 @@ func truncateFileName(name string, maxNameWidth int) string {
 
 	dotIndex := strings.LastIndex(name, ".")
 	if dotIndex > 0 {
-		// put elipsis before file extension
-		end = ellipsis+" "+name[dotIndex:]
+		// This is necessary to handle a file name like:
+		// Creative Cloud Files test@gmail.com f9213e08fac784ca5f415c9efe786a51fff4dc45dcdca2e91a3fc6f33fa89b9d
+		if len(name) - dotIndex < 5 {
+			// put elipsis before file extension
+			end = ellipsis+" "+name[dotIndex:]
+			log.Printf("end: %s", end)
+		}
 	}
 
 	startKeepAmt := maxNameWidth - len(end)
