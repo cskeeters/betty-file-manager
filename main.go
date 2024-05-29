@@ -747,7 +747,11 @@ func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
 }
 
 func ClearLastd() {
-	err := os.Remove(filepath.Join(home,".local", "state", "bfm.lastd"))
+	lastdpath := filepath.Join(home,".local", "state", "bfm.lastd")
+	if _, err := os.Stat(lastdpath); errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	err := os.Remove(lastdpath)
 	if err != nil {
 		log.Printf("Error removing bfm.lastd: "+err.Error())
 	}
