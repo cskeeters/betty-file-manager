@@ -728,7 +728,7 @@ func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
 	fwriteln(t, "Error running:\n")
 	fwriteln(t, "  "+full_command)
 	fwriteln(t, "")
-	
+
 	fwriteln(t, "STDERR:")
 
 	line, err := msg.stderr.ReadString('\n')
@@ -759,7 +759,7 @@ func ClearLastd() {
 
 func (m *model) writeLastd() {
 	ct := m.CurrentTab
-	
+
 	d1 := []byte(ct.directory)
 	err := os.WriteFile(filepath.Join(home,".local", "state", "bfm.lastd"), d1, 0644)
 	if err != nil {
@@ -897,7 +897,7 @@ func (m *model) runPluginCommands(f string) tea.Cmd {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		err = scanner.Err(); 
+		err = scanner.Err();
 		if err != nil {
 			return errorGen(errors.New("Error reading cmd file "+f+":"+err.Error()))
 		}
