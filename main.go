@@ -858,7 +858,7 @@ func writeHelp(help string) {
 		}
 		defer file.Close()
 
-		_, err = file.Write([]byte(generateHelp()))
+		_, err = file.Write([]byte(help))
 		if err != nil {
 			log.Fatal(err)
 		}
