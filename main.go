@@ -108,7 +108,7 @@ type tabMsg int
 type runFinishedMsg struct{ errok bool; cmd string; args []string; err error; stderr bytes.Buffer}
 type runPluginFinishedMsg struct{ pluginpath string; statepath, cmdpath string; err error }
 type refreshMsg int
-type errorMsg error
+type panicMsg error
 type renameFinishedMsg string
 type bulkRenameFinishedMsg struct { tmppath string; src_names []string }
 type duplicateFinishedMsg string
@@ -432,9 +432,11 @@ func refresh() tea.Cmd {
 		return refreshMsg(0)
 	}
 }
-func errorGen(err error) tea.Cmd {
+
+// This will return a tea command that when run will log an error and gracefully exit the bubbletea application
+func panic(err error) tea.Cmd {
 	return func () tea.Msg {
-		return errorMsg(err)
+		return panicMsg(err)
 	}
 }
 
@@ -1642,7 +1644,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			return m, refresh()
 		}
-	case errorMsg:
+	case panicMsg:
 		log.Printf("Fatal Error: %s", msg)
 		return m, tea.Quit
 
