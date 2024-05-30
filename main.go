@@ -74,6 +74,13 @@ type selectedFile struct {
 	file fs.DirEntry
 }
 
+type runInfo struct {
+	fullCmd string
+	err error
+	stdout string
+	stderr string
+}
+
 type model struct {
 	// Application Fields
 	firstResize bool
@@ -393,6 +400,21 @@ func (m model) Init() tea.Cmd {
 	return tea.EnterAltScreen
 }
 
+// Adds error message to be shown to the user
+func (m *model) appendError(msg string) {
+	scanner := bufio.NewScanner(strings.NewReader(msg))
+	for scanner.Scan() {
+		log.Printf("%s", scanner.Text())
+	}
+
+	m.errors = append(m.errors, msg)
+}
+
+func (m *model) appendRunError(msg string, info runInfo) {
+	m.appendError(fmt.Sprintf("%s with cmd:\n\n\t%s\n\nSTDOUT\n======\n\n%s\n\nSTDERR\n======\n\n\t%s\n", msg, info.fullCmd, info.stdout, info.stderr))
+}
+
+
 func cd(path string) tea.Cmd {
 	return func () tea.Msg {
 		return cdMsg(path)
@@ -693,7 +715,7 @@ func (m *model) MovePrevSelected() {
 	m.checkScrollUp()
 }
 
-// Supports edit, open, trash
+// Supports edit
 func Run(errok bool, dir, cmd string, args ...string) tea.Cmd {
 	var stderr bytes.Buffer
 	c := exec.Command(cmd, args...) //nolint:gosec
@@ -748,6 +770,40 @@ func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
 	// Set errok so there is no infinite loop if less isn't installed
 	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
 }
+
+// Runs prog with args and logs command, stdout, and stderr when program exits with an error
+func RunBlock(prog string, args ...string) runInfo {
+
+	var info runInfo
+	info.fullCmd = prog+" "+strings.Join(args, " ")
+
+	cmd := exec.Command(prog, args...) //nolint:gosec
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	stderrByteArray, _ := io.ReadAll(stderr)
+	stdoutByteArray, _ := io.ReadAll(stdout)
+
+	info.stderr = string(stderrByteArray[:])
+	info.stdout = string(stdoutByteArray)
+
+	info.err = cmd.Wait()
+
+	return info
+}
+
 
 func ClearLastd() {
 	lastdpath := filepath.Join(home,".local", "state", "bfm.lastd")
@@ -891,7 +947,8 @@ func (m *model) toTeaCmd(cmd string) tea.Cmd {
 func (m *model) runPluginCommands(f string) tea.Cmd {
 	file, err := os.Open(f)
 	if err != nil {
-		return errorGen(errors.New("Error opening cmd file "+f+":"+err.Error()))
+		m.appendError("Error opening cmd file "+f+":"+err.Error())
+		return nil
 	}
 	defer file.Close()
 
@@ -902,7 +959,7 @@ func (m *model) runPluginCommands(f string) tea.Cmd {
 	for scanner.Scan() {
 		err = scanner.Err();
 		if err != nil {
-			return errorGen(errors.New("Error reading cmd file "+f+":"+err.Error()))
+			m.appendError("Error reading cmd file "+f+":"+err.Error())
 		}
 
 		teaCmd := m.toTeaCmd(scanner.Text())
@@ -914,7 +971,7 @@ func (m *model) runPluginCommands(f string) tea.Cmd {
 
 func (m *model) MoveFiles() tea.Cmd {
 	if len(m.selectedFiles) == 0 {
-		log.Println("No files selected to move")
+		m.appendError("No files selected to move")
 		return nil
 	}
 
@@ -926,10 +983,9 @@ func (m *model) MoveFiles() tea.Cmd {
 			dst := m.CurrentTab.absdir
 
 			log.Printf("Moving %s to %s", src, dst)
-			c := exec.Command("mv", src, dst) //nolint:gosec
-			err := c.Run()
-			if err != nil {
-				log.Fatal(err)
+			info := RunBlock("mv", src, dst)
+			if info.err != nil {
+				m.appendRunError("Error moving file", info)
 			}
 		}
 	}
@@ -947,16 +1003,15 @@ func (m *model) CopyFiles() tea.Cmd {
 
 	for _, sf := range(m.selectedFiles) {
 		if (sf.directory == m.CurrentTab.absdir) {
-			log.Printf("%s is already in %s", sf.file.Name(), sf.directory)
+			m.appendError(fmt.Sprintf("%s is already in %s", sf.file.Name(), sf.directory))
 		} else {
 			src := fmt.Sprintf("%s/%s", sf.directory, sf.file.Name())
 			dst := m.CurrentTab.absdir
 
 			log.Printf("Copying %s to %s", src, dst)
-			c := exec.Command("cp", src, dst) //nolint:gosec
-			err := c.Run()
-			if err != nil {
-				log.Fatal(err)
+			info := RunBlock("cp", src, dst)
+			if info.err != nil {
+				m.appendRunError("Error copying file", info)
 			}
 		}
 	}
@@ -966,17 +1021,21 @@ func (m *model) CopyFiles() tea.Cmd {
 	return refresh()
 }
 
-
-func RemoveFile(path string) error {
+func (m *model) RemoveFile(path string) {
 	log.Printf("Removing %s", path)
-	c := exec.Command("rm", "-rf", "--", path) //nolint:gosec
-	return c.Run()
+
+	info := RunBlock("rm", "-rf", "--", path) //nolint:gosec
+	if info.err != nil {
+		m.appendRunError("Error removing file", info)
+	}
 }
 
-func TrashFile(path string) error {
+func (m *model) TrashFile(path string) {
 	log.Printf("Trashing %s", path)
-	c := exec.Command("trash", "--", path) //nolint:gosec
-	return c.Run()
+	info := RunBlock("trash", "--", path) //nolint:gosec
+	if info.err != nil {
+		m.appendRunError("Error trashing file", info)
+	}
 }
 
 func (m *model) TrashFiles() tea.Cmd {
@@ -984,22 +1043,45 @@ func (m *model) TrashFiles() tea.Cmd {
 		ct := m.CurrentTab
 		file := ct.filteredFiles[ct.cursor]
 		path := filepath.Join(ct.absdir, file.Name())
-		err := TrashFile(path)
-		if err != nil {
-			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
-		} else {
-			return refresh()
-		}
+		m.TrashFile(path)
+		return refresh()
 	}
 
 	for _, sf := range(m.selectedFiles) {
 		path := filepath.Join(sf.directory, sf.file.Name())
-		err := TrashFile(path)
-		if err != nil {
-			// Stop on first error
-			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
-		}
+		m.TrashFile(path)
 	}
+
+	m.ClearSelections()
+
+	return refresh()
+}
+
+func (m *model) RunOpen(paths []string) {
+	args := append([]string{"--"}, paths...)
+	info := RunBlock("open", args...)
+	if info.err != nil {
+		m.appendRunError("Error opening file", info)
+	}
+}
+
+func (m *model) OpenFiles() tea.Cmd {
+	if len(m.selectedFiles) == 0 {
+		ct := m.CurrentTab
+		file := ct.filteredFiles[ct.cursor]
+		path := filepath.Join(ct.absdir, file.Name())
+		m.RunOpen([]string{path})
+		return refresh()
+	}
+
+	var paths []string
+
+	for _, sf := range(m.selectedFiles) {
+		path := filepath.Join(sf.directory, sf.file.Name())
+		paths = append(paths, path)
+	}
+
+	m.RunOpen(paths)
 
 	m.ClearSelections()
 
@@ -1012,21 +1094,13 @@ func (m *model) RemoveFiles() tea.Cmd {
 		ct := m.CurrentTab
 		file := ct.filteredFiles[ct.cursor]
 		path := filepath.Join(ct.absdir, file.Name())
-		err := RemoveFile(path)
-		if err != nil {
-			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
-		} else {
-			return refresh()
-		}
+		m.RemoveFile(path)
+		return refresh()
 	}
 
 	for _, sf := range(m.selectedFiles) {
 		path := filepath.Join(sf.directory, sf.file.Name())
-		err := RemoveFile(path)
-		if err != nil {
-			// Stop on first error
-			return errorGen(errors.New("Error removing "+path+":"+err.Error()))
-		}
+		m.RemoveFile(path)
 	}
 
 	m.ClearSelections()
@@ -1220,14 +1294,16 @@ func (m *model) MkDir() tea.Cmd {
 func (m *model) FinishMkDir(f string) tea.Cmd {
 	file, err := os.Open(f)
 	if err != nil {
-		return errorGen(errors.New("Error opening temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		return errorGen(errors.New("Error reading temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	dir_name := scanner.Text()
 
@@ -1243,14 +1319,16 @@ func (m *model) FinishMkDir(f string) tea.Cmd {
 func (m *model) FinishRename(f string) tea.Cmd {
 	file, err := os.Open(f)
 	if err != nil {
-		return errorGen(errors.New("Error opening temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		return errorGen(errors.New("Error reading temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	dst_name := scanner.Text()
 
@@ -1263,54 +1341,96 @@ func (m *model) FinishRename(f string) tea.Cmd {
 	dst := filepath.Join(m.CurrentTab.absdir, dst_name)
 	os.Rename(src, dst)
 
-	log.Printf("Rename %s to %s", hoveredFile.Name(), dst_name)
+	log.Printf("Renamed %s to %s", hoveredFile.Name(), dst_name)
 	return refresh()
 }
 
-func (m *model) FinishBulkRename(f string, src_files []string) tea.Cmd {
+func contains[T comparable](s []T, e T) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+// TODO: Detect when a destination name is the same as a source name
+func (m *model) FinishBulkRename(f string, src_names []string) tea.Cmd {
 	file, err := os.Open(f)
 	if err != nil {
-		return errorGen(errors.New("Error opening temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	defer file.Close()
+
+	var dst_names []string
+	var issues []string
 
 	scanner := bufio.NewScanner(file)
 	for i := 0; scanner.Scan(); i++ {
 		if err := scanner.Err(); err != nil {
-			return errorGen(errors.New("Error reading temporary file "+f+":"+err.Error()))
+			issues = append(issues, "Error reading temporary file "+f+":"+err.Error())
 		}
 		dst_name := scanner.Text()
+		commentPos := strings.Index(dst_name, ";")
 
-		if i >= len(src_files) {
-			log.Printf("no src file name for line %d",i)
-		} else {
-			src_name := src_files[i]
-			if src_name != dst_name {
-				src := filepath.Join(m.CurrentTab.absdir, src_name)
-				dst := filepath.Join(m.CurrentTab.absdir, dst_name)
-				os.Rename(src, dst)
-				log.Printf("Renamed %s to %s", src_name, dst_name)
-			} else {
-				log.Printf("%s not renamed", src_name)
+		if commentPos == -1 {
+			fmt.Printf("Testing dst_name: %s\n", dst_name)
+			if i < len(src_names) {
+				if src_names[i] != dst_name {
+					if contains(src_names, dst_name) {
+						issues = append(issues, fmt.Sprintf("Destination %s is a source.  Possible Loop.", dst_name))
+					}
+				}
 			}
+			dst_names = append(dst_names, dst_name)
 		}
 	}
 
-	return refresh()
+	if len(issues) > 0 {
+		m.appendError(strings.Join(issues, "\n"))
+	} else {
+		// Only perform the rename if there were no errors
+		for i, dst_name := range dst_names {
+			var errors []string
+
+			if i >= len(src_names) {
+				errors = append(errors, fmt.Sprintf("no src file name for line %d",i))
+			} else {
+				src_name := src_names[i]
+				if src_name != dst_name {
+					src := filepath.Join(m.CurrentTab.absdir, src_name)
+					dst := filepath.Join(m.CurrentTab.absdir, dst_name)
+					os.Rename(src, dst)
+					log.Printf("Renamed %s to %s", src_name, dst_name)
+				} else {
+					log.Printf("DEBUG: %s not renamed", src_name)
+				}
+			}
+			if len(errors) > 0 {
+				m.appendError(strings.Join(errors, "\n"))
+			}
+		}
+		return refresh()
+	}
+
+	return nil
 }
 
 
 func (m *model) FinishDuplicate(f string) tea.Cmd {
 	file, err := os.Open(f)
 	if err != nil {
-		return errorGen(errors.New("Error opening temporary file "+f+":"+err.Error()))
+		m.appendError("Error opening temporary file "+f+":"+err.Error())
+		return nil
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		return errorGen(errors.New("Error reading temporary file "+f+":"+err.Error()))
+		m.appendError("Error reading temporary file "+f+":"+err.Error())
+		return nil
 	}
 	dst_name := scanner.Text()
 
@@ -1324,21 +1444,21 @@ func (m *model) FinishDuplicate(f string) tea.Cmd {
 
 	srcf, err := os.Open(src)
 	if err != nil {
-		log.Printf("Error opening %s", src)
+		m.appendError(fmt.Sprintf("Error opening %s", src))
 		return nil
 	}
 	defer srcf.Close()
 
 	dstf, err := os.Create(dst)
 	if err != nil {
-		log.Printf("Error opening %s", src)
+		m.appendError(fmt.Sprintf("Error opening %s", src))
 		return nil
 	}
 	defer dstf.Close()
 
 	_, err = io.Copy(dstf, srcf)
 	if err != nil {
-		log.Printf("Error copying %s to %s", src, dst)
+		m.appendError(fmt.Sprintf("Error copying %s to %s", src, dst))
 		return nil
 	}
 
@@ -1480,7 +1600,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("A")),      d("Select all files")))
 	doc.WriteString(f("    %s - %s\n", p(k("d")),      d("Deselect All Files")))
 	doc.WriteString(f("    %s - %s\n", p(k("e")),      d("Edit file (with EDITOR environment variable)")))
-	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file (with open command/alias)")))
+	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file(s) (with open command/alias)")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+n")), d("Cat the file to dev null to trigger OneDrive sync")))
 	doc.WriteString(f("    %s - %s\n", p(k("T")),      d("Trash file (with open command/alias)")))
 	doc.WriteString(f("    %s - %s\n", p(k("X")),      d("Remove selected or hovered file(s)/directory(s) (with rm -rf command)")))
@@ -1647,8 +1767,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "ctrl+n": // This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
 				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
 			case "o":
-				// User may need to define an alias open for linux
-				return m, Run(false, ct.directory, "open", ct.filteredFiles[ct.cursor].Name())
+				return m, m.OpenFiles()
 			case "S":
 				if os.Getenv("TMUX") != "" {
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
