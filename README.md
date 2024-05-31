@@ -183,35 +183,6 @@ bfm just calls trash, which can be a script or anything to perform the trash. Im
 * Simpler file sorting
 
 
-# Developing/Customizing
-
-bfm is written to be easily modified by developers.  It's written in [go](https://go.dev) and depends on:
-
-* [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss)
-* [charmbracelet/bubbletea](https://github.com/charmbracelet/bubbletea)
-* [go/x/term](https://cs.opensource.google/go/x/term)
-
-## Lipgloss
-
-Lipgloss is like css for the TUI.  Styles are defined as variables and are then applied to pieces of text.  Applying a style to a string returns a new string with the [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code) required to style the text.
-
-TIP: Lipgloss provides an easy way to obtain the displayable width of a string that has been styled
-
-    width := lipgloss.Width(textWithASNI)
-
-## Bubbletea
-
-Bubbletea provides an event loop framework for TUI.  Each time an event occurs (such as a keypress) an event is build and passed to `Update`.  `Update` modifies a model that stores application state.  `View` is called to build a displayable screen for the user based on the current state in model.
-
-## Term
-
-*term* is mainly used to get the width and height of the terminal.  When the window is resized, `Update` is passed a `tea.WindowSizeMsg` which requires the terminal width and height so that a screen customized to the current dimensions can be drawn by `View`.
-
-## Logging
-
-Betty logs to `~/.local/log/bfm.log`.
-
-
 # Plugins
 
 bfm has a simple plugin mechanism.  It's hardly a plugin system because keys to trigger a plugin have to be manually added to the source code.  This may change in the future.
@@ -245,3 +216,53 @@ Create `~/.config/bfm/bfmrc`
     [[WdReplacement]]
     real = "Library/CloudStorage/OneDrive-SharedLibraries-CompanyName"
     repl = "=OneDrive Shared="
+
+
+# Developing
+
+bfm is written to be easily modified by developers.  It's written in [go](https://go.dev) and depends on:
+
+* [charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss)
+* [charmbracelet/bubbletea](https://github.com/charmbracelet/bubbletea)
+* [go/x/term](https://cs.opensource.google/go/x/term)
+
+## Lipgloss
+
+Lipgloss is like css for the TUI.  Styles are defined as variables and are then applied to pieces of text.  Applying a style to a string returns a new string with the [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code) required to style the text.
+
+TIP: Lipgloss provides an easy way to obtain the displayable width of a string that has been styled
+
+    width := lipgloss.Width(textWithASNI)
+
+## Bubbletea
+
+Bubbletea provides an event loop framework for TUI.  Each time an event occurs (such as a keypress) an event is build and passed to `Update`.  `Update` modifies a model that stores application state.  `View` is called to build a displayable screen for the user based on the current state in model.
+
+## Term
+
+*term* is mainly used to get the width and height of the terminal.  When the window is resized, `Update` is passed a `tea.WindowSizeMsg` which requires the terminal width and height so that a screen customized to the current dimensions can be drawn by `View`.
+
+## Logging
+
+Bfm logs to `~/.local/log/bfm.log`.
+
+## Files
+
+File                | Description
+--------------------|----------------------------------------------------
+config.go           | Loads toml configuration
+file_operations.go  | User operations like Move, Copy, Delete, etc.
+fileutil.go         | File related function helpers
+help.go             | Generates help documentation
+main.go             | Main program w/ Update (key processing)
+mathutil.go         | Math related function helpers (min, max)
+model.go            | BFM app state
+operations.go       | View related operations like close tab
+order.go            | File sorting
+plugin.go           | Plugin system
+shell.go            | Runs other programs like mv, cp, rm, vim, bash
+sliceutil.go        | Slice related function helpers
+stringutil.go       | String related function helpers
+style.go            | Application styling (lipgloss)
+util.go             | BFM app helpers
+view.go             | Draw related code
