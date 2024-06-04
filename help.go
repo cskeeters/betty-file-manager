@@ -38,7 +38,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("4")),      d("Activate tab 4")))
 	doc.WriteString(f("    %s - %s\n", p(k("5")),      d("Activate tab 5")))
 	doc.WriteString(f("    %s - %s\n", p(k("6")),      d("Activate tab 6")))
-	doc.WriteString(f("    %s - %s\n", p(k("ctrl+s")), d("View Selected Files")))
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+s")), d("View selected files")))
 
 	doc.WriteString(s("Filtering")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("/")),      d("Filter files (current tab only)")))
@@ -56,13 +56,14 @@ func generateHelp() string {
 
 	doc.WriteString(s("Navigation")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("h")+","+k("-")+","+k("bs")), d("Parent directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+-")),                   d("Select file to navigate to with FZF")))
 	doc.WriteString(f("    %s - %s\n", p(k("l")+"/"+k("enter")),         d("Enter hovered directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("~")),                        d("Home directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+o")),                   d("Back in jumplist")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+i")),                   d("Next in jumplist")))
-	doc.WriteString(f("    %s - %s\n", p(k("a")),                        d("Select directory with FZF")))
-	doc.WriteString(f("    %s - %s\n", p(k("J")),                        d("autojump")))
-	doc.WriteString(f("    %s - %s\n", p(k("ctrl+j")),                   d("autojump with FZF")))
+	doc.WriteString(f("    %s - %s\n", p(k("a")),                        d("Select directory from .paths with FZF")))
+	doc.WriteString(f("    %s - %s\n", p(k("J")),                        d("autojump (I'm feeling lucky)")))
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+j")),                   d("FZF on autojump results")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+/")),                   d("Jump to sub file/dir by FZF selection"))) // mapped as ctrl+_  It works, not sure why
 
 	doc.WriteString(s("Sorting")+"\n")

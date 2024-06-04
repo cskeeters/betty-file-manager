@@ -163,29 +163,29 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "a":
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzcd"))
-			case "ctrl+_":
+			case "ctrl+_": // cd and cursor to file selected by fzf
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzjump"))
-			case "J":
+			case "J": // autojump (I'm feeling lucky)
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"))
-			case "ctrl+j":
+			case "ctrl+j": // fzf on autojump results
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"), "FZF")
-			case "ctrl+s":
+			case "ctrl+s": // View selected files
 				m.mode = selectedMode
 				return m, refresh()
 
 			// Operations
 
-			case "s":
+			case "s": // Select
 				m.ToggleSelected()
 				m.MoveCursor(1)
 			case "A":
 				return m, m.SelectAll()
 			case "d":
 				return m, m.DeselectAll()
-			case "e":
+			case "e": // Edit
 				if os.Getenv("TMUX") != "" {
 					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
@@ -194,18 +194,18 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "ctrl+n": // This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
 				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
-			case "o":
+			case "o": // Open
 				return m, m.OpenFiles()
-			case "S":
+			case "S": // Shell
 				if os.Getenv("TMUX") != "" {
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
 				} else {
 					home := os.Getenv("HOME")
 					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
 				}
-			case "V":
+			case "V": // Vim
 				return m, Run(false, ct.directory, "nvim")
-			case "F":
+			case "F": // Finder
 				// User may need to define an alias open for linux
 				return m, Run(false, ct.directory, "open", ct.directory)
 			case "T":
