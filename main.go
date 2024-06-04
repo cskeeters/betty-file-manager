@@ -379,14 +379,12 @@ func getStartDir(args []string) string {
 func main() {
 	home = os.Getenv("HOME")
 	logpath := filepath.Join(home,".local/log/bfm.log")
-	helpPath = filepath.Join(home,".local/share/bfm/help.txt")
+	helpPath = filepath.Join(home,".local/share/bfm/help-"+version+".txt")
 
 	// we only want the lastd file to be valid if we exit cleanly
 	ClearLastd()
 
 	LoadConfig()
-
-	writeHelp(generateHelp())
 
 	os.MkdirAll(filepath.Dir(logpath), 0755)
 
@@ -396,6 +394,8 @@ func main() {
 	}
 	defer f.Close()
 	log.SetOutput(f)
+
+	writeHelp(generateHelp())
 
 	startDir := getStartDir(os.Args)
 

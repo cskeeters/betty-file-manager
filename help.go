@@ -102,6 +102,12 @@ func writeHelp(help string) {
 	}
 
 	if _, err := os.Stat(helpPath); errors.Is(err, os.ErrNotExist) {
+		log.Printf("Removing other help files")
+
+		info := RunBlock("bash", "-c", "rm -f "+filepath.Join(dirPath, "help*"))
+		if info.err != nil {
+			log.Fatalf("Error removing other help files")
+		}
 		log.Printf("Writing help to : %s", helpPath)
 		file, err := os.OpenFile(helpPath, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
