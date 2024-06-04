@@ -17,6 +17,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+var version = "undefined"
+
 type panicMsg error
 
 var helpPath string
