@@ -129,6 +129,39 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "q", "ctrl+c":
 				return m, m.CloseTab()
 
+			case "?":
+				// -I Case-Insensitive Searching
+				// -R Raw characters (for color support in terminals)
+				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
+
+			case "1":
+				return m, tab(1)
+			case "2":
+				return m, tab(2)
+			case "3":
+				return m, tab(3)
+			case "4":
+				return m, tab(4)
+			case "5":
+				return m, tab(5)
+			case "6":
+				return m, tab(6)
+
+			case "ctrl+s": // View selected files
+				m.mode = selectedMode
+				return m, refresh()
+
+			// Filterning
+			case "/":
+				m.mode = filterMode
+				return m, nil
+
+			case "ctrl+l":
+				// Don't use SetFilter, because we don't need to re-sort before we refresh
+				ct.filter = ""
+				//m.viewport.GotoTop()
+				return m.handleRefresh()
+
 			//Cursor Movement
 			case "j", "down":
 				m.MoveCursor(1)
@@ -151,7 +184,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.MovePrevSelected()
 
 			// Navigation
-			case "-", "h", "backspace":
+			case "h", "-", "backspace":
 				// Go up a directory
 				return m, cd(filepath.Dir(ct.directory))
 
@@ -159,96 +192,33 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				if m.isHoveredDir() {
 					return m, cd(m.getHoveredPath())
 				}
+
 			case "~":
 				usr, _ := user.Current()
 				return m, cd(usr.HomeDir)
+
+			case "ctrl+o":
+				return m, m.GoHistoryBack()
+			case "tab": // "ctrl+i" issues tab
+				return m, m.GoHistoryForward()
+
 			case "a":
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzcd"))
-			case "ctrl+_": // cd and cursor to file selected by fzf
+
+			// Pressing ctrl+/ sends ctrl+_ on VT102 compatible terminals such as iTerm2 and alacritty
+			case "ctrl+_": // Jump to sub file/dir by FZF selection
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzjump"))
+
 			case "J": // autojump (I'm feeling lucky)
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"))
 			case "ctrl+j": // fzf on autojump results
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"), "FZF")
-			case "ctrl+s": // View selected files
-				m.mode = selectedMode
-				return m, refresh()
-
-			// Operations
-
-			case "s": // Select
-				m.ToggleSelected()
-				m.MoveCursor(1)
-			case "A":
-				return m, m.SelectAll()
-			case "d":
-				return m, m.DeselectAll()
-			case "e": // Edit
-				if os.Getenv("TMUX") != "" {
-					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
-					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
-				} else {
-					return m, Run(false, ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
-				}
-			case "ctrl+n": // This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
-				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
-			case "o": // Open
-				return m, m.OpenFiles()
-			case "S": // Shell
-				if os.Getenv("TMUX") != "" {
-					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
-				} else {
-					home := os.Getenv("HOME")
-					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
-				}
-			case "V": // Vim
-				return m, Run(false, ct.directory, "nvim")
-			case "F": // Finder
-				// User may need to define an alias open for linux
-				return m, Run(false, ct.directory, "open", ct.directory)
-			case "T":
-				// https://github.com/morgant/tools-osx
-				return m, m.TrashFiles()
-			case "X":
-				return m, m.RemoveFiles()
-			case "D":
-				return m, m.DuplicateFile()
-			case "v":
-				return m, m.MoveFiles()
-			case "p":
-				return m, m.CopyFiles()
-			case "R":
-				return m, m.RenameFile()
-			case "ctrl+r":
-				return m, m.BulkRename()
-			case "N":
-				return m, m.MkDir()
-			case "1":
-				return m, tab(1)
-			case "2":
-				return m, tab(2)
-			case "3":
-				return m, tab(3)
-			case "4":
-				return m, tab(4)
-			case "5":
-				return m, tab(5)
-			case "6":
-				return m, tab(6)
-			case "/":
-				m.mode = filterMode
-				return m, nil
-			case "?":
-				// -I Case-Insensitive Searching
-				// -R Raw characters (for color support in terminals)
-				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
 
 			// Sorting
-
 			case "n":
 				ct.SetSort(nameSort)
 				m.viewport.GotoTop()
@@ -259,15 +229,65 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				ct.SetSort(sizeSort)
 				m.viewport.GotoTop()
 
-			case "ctrl+l":
-				// Don't use SetFilter, because we don't need to re-sort before we refresh
-				ct.filter = ""
-				//m.viewport.GotoTop()
-				return m.handleRefresh()
-			case "ctrl+o":
-				return m, m.GoHistoryBack()
-			case "tab": // "ctrl+i" issues tab
-				return m, m.GoHistoryForward()
+			// Selection
+			case "s": // Select
+				m.ToggleSelected()
+				m.MoveCursor(1)
+			case "A":
+				return m, m.SelectAll()
+			case "d":
+				return m, m.DeselectAll()
+
+			// Operations
+			case "v":
+				return m, m.MoveFiles()
+			case "p":
+				return m, m.CopyFiles()
+
+			case "o": // Open
+				return m, m.OpenFiles()
+			case "e": // Edit
+				if os.Getenv("TMUX") != "" {
+					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
+					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
+				} else {
+					return m, Run(false, ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
+				}
+
+			case "N":
+				return m, m.MkDir()
+
+			case "D":
+				return m, m.DuplicateFile()
+
+			case "R":
+				return m, m.RenameFile()
+			case "ctrl+r":
+				return m, m.BulkRename()
+
+			case "T":
+				// https://github.com/morgant/tools-osx
+				return m, m.TrashFiles()
+			case "X":
+				return m, m.RemoveFiles()
+
+			case "F": // Finder
+				// User may need to define an alias open for linux
+				return m, Run(false, ct.directory, "open", ct.directory)
+			case "S": // Shell
+				if os.Getenv("TMUX") != "" {
+					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
+				} else {
+					home := os.Getenv("HOME")
+					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
+				}
+			case "V": // Vim
+				return m, Run(false, ct.directory, "nvim")
+
+			// This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
+			case "ctrl+n": // Cat to Null
+				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
+
 			}
 			m.viewport.SetContent(m.generateContent())
 		}

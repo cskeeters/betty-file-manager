@@ -56,37 +56,42 @@ func generateHelp() string {
 
 	doc.WriteString(s("Navigation")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("h")+","+k("-")+","+k("bs")), d("Parent directory")))
-	doc.WriteString(f("    %s - %s\n", p(k("ctrl+-")),                   d("Select file to navigate to with FZF")))
 	doc.WriteString(f("    %s - %s\n", p(k("l")+"/"+k("enter")),         d("Enter hovered directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("~")),                        d("Home directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+o")),                   d("Back in jumplist")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+i")),                   d("Next in jumplist")))
 	doc.WriteString(f("    %s - %s\n", p(k("a")),                        d("Select directory from .paths with FZF")))
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+/")),                   d("Jump to sub file/dir by FZF selection"))) // mapped as ctrl+_  It works, not sure why
 	doc.WriteString(f("    %s - %s\n", p(k("J")),                        d("autojump (I'm feeling lucky)")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+j")),                   d("FZF on autojump results")))
-	doc.WriteString(f("    %s - %s\n", p(k("ctrl+/")),                   d("Jump to sub file/dir by FZF selection"))) // mapped as ctrl+_  It works, not sure why
 
 	doc.WriteString(s("Sorting")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("n")), d("Sort by name")))
 	doc.WriteString(f("    %s - %s\n", p(k("m")), d("Sort by last modified")))
 	doc.WriteString(f("    %s - %s\n", p(k("z")), d("Sort by size (reverse)")))
 
-	doc.WriteString(s("Operations")+"\n")
+	doc.WriteString(s("Selection")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("s")),      d("Toggle select on file/directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("A")),      d("Select all files")))
 	doc.WriteString(f("    %s - %s\n", p(k("d")),      d("Deselect All Files")))
-	doc.WriteString(f("    %s - %s\n", p(k("e")),      d("Edit file (with EDITOR environment variable)")))
-	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file(s) (with open command/alias)")))
-	doc.WriteString(f("    %s - %s\n", p(k("ctrl+n")), d("Cat the file to dev null to trigger OneDrive sync")))
-	doc.WriteString(f("    %s - %s\n", p(k("T")),      d("Trash file (with open command/alias)")))
-	doc.WriteString(f("    %s - %s\n", p(k("X")),      d("Remove selected or hovered file(s)/directory(s) (with rm -rf command)")))
-	doc.WriteString(f("    %s - %s\n", p(k("D")),      d("Duplicate file")))
+
+	doc.WriteString(s("Operations")+"\n")
 	doc.WriteString(f("    %s - %s\n", p(k("v")),      d("Move selected files to current directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("p")),      d("Copy selected files to current directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file(s) (with open command/alias)")))
+	doc.WriteString(f("    %s - %s\n", p(k("e")),      d("Edit file (with EDITOR environment variable)")))
+	doc.WriteString(f("    %s - %s\n", p(k("N")),      d("New directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("D")),      d("Duplicate file")))
 	doc.WriteString(f("    %s - %s\n", p(k("R")),      d("Rename hovered file")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+r")), d("Bulk Rename with EDITOR")))
-	doc.WriteString(f("    %s - %s\n", p(k("N")),      d("New directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("T")),      d("Trash file (with open command/alias)")))
+	doc.WriteString(f("    %s - %s\n", p(k("X")),      d("Remove selected or hovered file(s)/directory(s) (with rm -rf command)")))
+
 	doc.WriteString(f("    %s - %s\n", p(k("F")),      d("Select finder to current directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("S")),      d("Open Shell in current directory (exit to return)")))
+	doc.WriteString(f("    %s - %s\n", p(k("V")),      d("Open nvim in current directory (close to return)")))
+
+	doc.WriteString(f("    %s - %s\n", p(k("ctrl+n")), d("Cat the file to /dev/null to trigger OneDrive sync")))
 
 	return doc.String()
 }
