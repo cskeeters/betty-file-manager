@@ -55,8 +55,14 @@ func (m *model) handleRefresh() (model, tea.Cmd) {
 	log.Printf("Re-ran filter for tab %d", m.CurrentTabIndex)
 
 	// Don't change the cursor unless it's no longer valid
-	ct.cursor = Min(len(ct.filteredFiles)-1, ct.cursor)
-	log.Printf("cursor: %d", ct.cursor)
+	if ct.cursor == -1 {
+		if len(ct.filteredFiles) > 0 {
+			ct.cursor = 0;
+		}
+	} else {
+		ct.cursor = Min(len(ct.filteredFiles)-1, ct.cursor)
+		log.Printf("cursor: %d", ct.cursor)
+	}
 
 	//m.viewport.GotoTop()
 	m.viewport.SetContent(m.generateContent())
