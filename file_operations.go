@@ -474,22 +474,28 @@ func (m *model) FinishBulkRename(f string, src_names []string) tea.Cmd {
 	return nil
 }
 
-// Duplicates the hovered file after user specifies name with EDITOR
-func (m *model) DuplicateFile() tea.Cmd {
-	ct := m.CurrentTab
-	hoveredFile := ct.filteredFiles[ct.cursor]
-
-	src := filepath.Join(m.CurrentTab.absdir, hoveredFile.Name())
-
+func isFile(src string) bool {
 	stat, err := os.Stat(src)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if !stat.Mode().IsRegular() {
-		m.appendError("Cursor must be over a file regular file to duplicate.")
-		return nil
+	return stat.Mode().IsRegular()
+}
+
+func isDir(src string) bool {
+	stat, err := os.Stat(src)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	return stat.Mode().IsDir()
+}
+
+// Duplicates the hovered file after user specifies name with EDITOR
+func (m *model) DuplicateFile() tea.Cmd {
+	ct := m.CurrentTab
+	hoveredFile := ct.filteredFiles[ct.cursor]
 
 	tmpdir := os.Getenv("TMPDIR")
 
@@ -556,26 +562,43 @@ func (m *model) FinishDuplicate(f string) tea.Cmd {
 	src := filepath.Join(m.CurrentTab.absdir, hoveredFile.Name())
 	dst := filepath.Join(m.CurrentTab.absdir, dst_name)
 
-	srcf, err := os.Open(src)
-	if err != nil {
-		m.appendError(fmt.Sprintf("Error opening %s", src))
+	if isFile(src) {
+		srcf, err := os.Open(src)
+		if err != nil {
+			m.appendError(fmt.Sprintf("Error opening %s", src))
+			return nil
+		}
+		defer srcf.Close()
+
+		dstf, err := os.Create(dst)
+		if err != nil {
+			m.appendError(fmt.Sprintf("Error opening %s", src))
+			return nil
+		}
+		defer dstf.Close()
+
+		_, err = io.Copy(dstf, srcf)
+		if err != nil {
+			m.appendError(fmt.Sprintf("Error copying %s to %s", src, dst))
+			return nil
+		}
+
+		log.Printf("Duplicated %s to %s", hoveredFile.Name(), dst_name)
+		return refresh()
+	} else if isDir(src) {
+
+		var args []string
+		args = append(args, "-r", src, dst)
+
+		info := RunBlock("cp", args...)
+		if info.err != nil {
+			m.appendRunError("Error duplicating file", info)
+		}
+
+		log.Printf("Duplicated %s to %s", src, dst)
+		return refresh()
+	} else {
+		m.appendError("Do not know how to duplicate file of this type")
 		return nil
 	}
-	defer srcf.Close()
-
-	dstf, err := os.Create(dst)
-	if err != nil {
-		m.appendError(fmt.Sprintf("Error opening %s", src))
-		return nil
-	}
-	defer dstf.Close()
-
-	_, err = io.Copy(dstf, srcf)
-	if err != nil {
-		m.appendError(fmt.Sprintf("Error copying %s to %s", src, dst))
-		return nil
-	}
-
-	log.Printf("Copied %s to %s", hoveredFile.Name(), dst_name)
-	return refresh()
 }
