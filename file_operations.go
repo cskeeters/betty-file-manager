@@ -487,7 +487,7 @@ func (m *model) DuplicateFile() tea.Cmd {
 	}
 
 	if !stat.Mode().IsRegular() {
-		log.Printf("%s is not a regular file", src)
+		m.appendError("Cursor must be over a file regular file to duplicate.")
 		return nil
 	}
 
