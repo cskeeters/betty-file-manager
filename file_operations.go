@@ -291,19 +291,36 @@ func (m *model) FinishMkDir(f string) tea.Cmd {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	scanner.Scan()
+	for scanner.Scan() {
+		
+		dir_name := scanner.Text()
+
+		i := strings.Index(dir_name, ";")
+		if i != -1 {
+			dir_name = dir_name[0:i]
+		}
+		dir_name = strings.TrimSpace(dir_name)
+
+		if dir_name != "" {
+			dst := filepath.Join(m.CurrentTab.absdir, dir_name)
+			err = os.Mkdir(dst, 0755)
+			if err != nil {
+				log.Printf(err.Error())
+				m.appendError("Error creating directory "+dir_name+":"+err.Error())
+			}
+
+			log.Printf("Made directory %s", dst)
+		}
+	}
+
+	os.Remove(f)
+
+	// when scanner.Scan returns false, check for error
 	if err := scanner.Err(); err != nil {
 		m.appendError("Error opening temporary file "+f+":"+err.Error())
 		return nil
 	}
-	dir_name := scanner.Text()
 
-	os.Remove(f)
-
-	dst := filepath.Join(m.CurrentTab.absdir, dir_name)
-	err = os.Mkdir(dst, 0755)
-
-	log.Printf("Made directory %s", dst)
 	return refresh()
 }
 
