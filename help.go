@@ -87,7 +87,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("T")),      d("Trash file (with open command/alias)")))
 	doc.WriteString(f("    %s - %s\n", p(k("X")),      d("Remove selected or hovered file(s)/directory(s) (with rm -rf command)")))
 
-	doc.WriteString(f("    %s - %s\n", p(k("F")),      d("Select finder to current directory")))
+	doc.WriteString(f("    %s - %s\n", p(k("F")),      d("Open Finder to current directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("S")),      d("Open Shell in current directory (exit to return)")))
 	doc.WriteString(f("    %s - %s\n", p(k("V")),      d("Open nvim in current directory (close to return)")))
 
