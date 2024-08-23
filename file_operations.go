@@ -273,7 +273,12 @@ func (m *model) MkDir() tea.Cmd {
 
 	c := exec.Command(Editor(), t.Name()) //nolint:gosec
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return mkdirFinishedMsg(t.Name())
+		if (err == nil) {
+			return mkdirFinishedMsg(t.Name())
+		} else {
+			log.Printf("User cancelled rename with cq")
+			return refresh()
+		}
 	})
 }
 
