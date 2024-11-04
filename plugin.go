@@ -108,7 +108,10 @@ func (m *model) runPluginCommands(f string) tea.Cmd {
 			m.appendError("Error reading cmd file "+f+":"+err.Error())
 		}
 
-		teaCmd := m.toTeaCmd(scanner.Text())
+		plugincmd := scanner.Text()
+		log.Printf("Running command: %s", plugincmd)
+
+		teaCmd := m.toTeaCmd(plugincmd)
 		teaCmds = append(teaCmds, teaCmd)
 	}
 
