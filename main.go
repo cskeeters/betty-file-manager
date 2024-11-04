@@ -252,6 +252,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "o": // Open
 				return m, m.OpenFiles()
+			case "P": // Open with Preview.app
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/preview"))
+
 			case "e": // Edit
 				if os.Getenv("TMUX") != "" {
 					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""

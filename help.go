@@ -79,6 +79,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("v")),      d("Move selected files to current directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("p")),      d("Copy selected files to current directory")))
 	doc.WriteString(f("    %s - %s\n", p(k("o")),      d("Open file(s) (with open command/alias)")))
+	doc.WriteString(f("    %s - %s\n", p(k("P")),      d("Open file(s) (with Preview.app)")))
 	doc.WriteString(f("    %s - %s\n", p(k("e")),      d("Edit file (with EDITOR environment variable)")))
 	doc.WriteString(f("    %s - %s\n", p(k("N")),      d("Create New directory(ies)")))
 	doc.WriteString(f("    %s - %s\n", p(k("D")),      d("Duplicate file")))

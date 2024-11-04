@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+echo $CUR_DIR
+echo $HOVERED_FILE
+
+open -a Preview.app "$CUR_DIR/$HOVERED_FILE"
