@@ -22,12 +22,12 @@ func fwriteln(f *os.File, line string) {
 	}
 }
 
-func getDirEntries(directory string) ([]fs.DirEntry) {
+func getDirEntries(directory string) ([]fs.DirEntry, error) {
 	files, err := os.ReadDir(directory)
 	if err != nil {
-		log.Fatal(err)
+		return files, err
 	}
-	return files
+	return files, nil
 }
 
 func resolveSymLink(path string) (string, error) {

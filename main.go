@@ -61,10 +61,16 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		m.handleResize(msg)
 
 	case cdMsg:
-		ct.ChangeDirectory(string(msg))
-		ct.AddHistory(string(msg))
-		m.viewport.SetContent(m.generateContent())
-		m.viewport.GotoTop()
+		dir := string(msg)
+		err := ct.ChangeDirectory(dir)
+		if err != nil {
+			m.appendError("Error cding to "+dir+".  Folder may have been removed.  Changing directory to root.")
+			return m, cd("/")
+		} else {
+			ct.AddHistory(dir)
+			m.viewport.SetContent(m.generateContent())
+			m.viewport.GotoTop()
+		}
 
 	case selectFileMsg:
 		ct.JumpToFile(string(msg))
@@ -430,7 +436,10 @@ func main() {
 	}
 
 	m.SelectTab(0)
-	m.tabs[0].ChangeDirectory(startDir)
+	err = m.tabs[0].ChangeDirectory(startDir)
+	if err != nil {
+		log.Fatalln("Error changing directory to "+startDir)
+	}
 	m.tabs[0].AddHistory(startDir)
 
 	m.scrollProgress = progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C"))

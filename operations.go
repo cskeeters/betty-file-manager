@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"path/filepath"
 
 	"golang.org/x/term"
 	tea "github.com/charmbracelet/bubbletea"
@@ -162,7 +163,12 @@ func (m *model) GoHistoryBack() tea.Cmd {
 
 	//log.Printf("Changing to %s di: %d dhl: %d", dir, ct.dirHistoryIndex, len(ct.dirHistory))
 
-	ct.ChangeDirectory(dir)
+	err := ct.ChangeDirectory(dir)
+	if err != nil {
+		parent := filepath.Dir(dir)
+		m.appendError("Error getting contents of "+dir+".  Folder may have been removed.  Changing directory to "+parent+".")
+		return cd(parent)
+	}
 	return refresh()
 }
 
@@ -178,7 +184,13 @@ func (m *model) GoHistoryForward() tea.Cmd {
 
 	//log.Printf("Changing to %s di: %d dhl: %d", dir, ct.dirHistoryIndex, len(ct.dirHistory))
 
-	ct.ChangeDirectory(dir)
+	err := ct.ChangeDirectory(dir)
+	if err != nil {
+		parent := filepath.Dir(dir)
+		m.appendError("Error getting contents of "+dir+".  Folder may have been removed.  Changing directory to "+parent+".")
+		return cd(parent)
+	}
+
 	return refresh()
 }
 

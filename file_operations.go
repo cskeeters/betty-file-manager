@@ -6,6 +6,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -49,7 +50,17 @@ func (m *model) handleRefresh() (model, tea.Cmd) {
 	// If files were moved or removed, the cursor needs to still be in range
 	ct := m.CurrentTab
 
-	ct.files = getDirEntries(ct.directory)
+	var err error
+	ct.files, err = getDirEntries(ct.directory)
+	if (err != nil) {
+		if ct.directory == "/" {
+			log.Fatal("Cannot get contents of the root folder")
+		} else {
+			parent := filepath.Dir(ct.directory)
+			m.appendError("Error getting contents of "+ct.directory+".  Folder may have been removed.  Changing directory to "+parent+".")
+			return *m, cd(parent)
+		}
+	}
 	log.Printf("Read dir %s for tab %d", ct.directory, m.CurrentTabIndex)
 	ct.ReRunFilter()
 	log.Printf("Re-ran filter for tab %d", m.CurrentTabIndex)
@@ -72,16 +83,35 @@ func (m *model) handleRefresh() (model, tea.Cmd) {
 }
 
 // Most of the time a call to ChangeDirectory should be followed by a call to AddHistory
-func (td *tabData) ChangeDirectory(path string) {
+func (td *tabData) ChangeDirectory(path string) (error) {
 	log.Printf("ChangeDirectory %s", path)
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	file_info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if ! file_info.IsDir() {
+		return errors.New("Not a directory")
+	}
+
 	td.directory = path
 	td.absdir, _ = filepath.Abs(path)
-	td.files = getDirEntries(td.directory)
+
+	td.files, err = getDirEntries(td.directory)
+	if (err != nil) {
+		log.Fatal("Cannot get contents of "+td.directory)
+	}
 	td.cursor = 0
 
 	// Maybe this should be an option SORT=keep or SORT=reset
 	//td.sort = modifiedSort
 	td.SetFilter("")
+
+	return nil
 }
 
 func (m *model) MoveFiles() tea.Cmd {
