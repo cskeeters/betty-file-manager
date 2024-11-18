@@ -178,7 +178,9 @@ func (m *model) CopyFiles() tea.Cmd {
 		m.appendError(strings.Join(errors, "\n"))
 		return nil
 	} else {
-		args := append(paths, dst)
+		args := []string{"-r"}
+		args = append(args, paths...)
+		args = append(args, dst)
 
 		info := RunBlock("cp", args...)
 		if info.err != nil {
