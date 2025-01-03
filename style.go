@@ -243,6 +243,12 @@ func getIcon(dir string, file fs.DirEntry) (string) {
 	if strings.HasSuffix(file.Name(), ".zip") {
 		return ""
 	}
+	if strings.HasSuffix(file.Name(), ".gz") {
+		return ""
+	}
+	if strings.HasSuffix(file.Name(), ".bz2") {
+		return ""
+	}
 	if strings.HasSuffix(file.Name(), ".txt") {
 		return ""
 	}

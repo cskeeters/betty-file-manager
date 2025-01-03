@@ -252,6 +252,12 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "o": // Open
 				return m, m.OpenFiles()
+			case "U": // Uncompress
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/uncompress"))
+			case "C": // Compress
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/compress"))
 			case "P": // Open with Preview.app
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/preview"))

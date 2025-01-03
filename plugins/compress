@@ -1,0 +1,29 @@
+#!/bin/bash
+
+source "$(dirname $0)/helper.sh"
+
+echo $CUR_DIR
+echo $HOVERED_FILE
+
+# cd to dir of the current tab so options will be sub-files
+cd "$CUR_DIR"
+pwd
+
+TYPE=$(cat << EOF | fzf
+tgz
+zip
+tar.bz2
+tar
+EOF)
+
+if [[ $TYPE == "tgz" ]]; then
+    tar -zcf "$CUR_DIR/${HOVERED_FILE}.tgz" "$HOVERED_FILE"
+elif [[ $TYPE == "zip" ]]; then
+    zip -r "$CUR_DIR/${HOVERED_FILE}.zip" "$HOVERED_FILE"
+elif [[ $TYPE == "tar.bz2" ]]; then
+    tar -jcf "$CUR_DIR/${HOVERED_FILE}.tar.bz2" "$HOVERED_FILE"
+else
+    exit 1
+fi
+
+echo "refresh" >> "$CMD_FILE"

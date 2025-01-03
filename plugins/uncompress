@@ -1,0 +1,29 @@
+#!/bin/bash -x
+
+source "$(dirname $0)/helper.sh"
+
+echo $CUR_DIR
+echo $HOVERED_FILE
+
+ZIP_RE='\.zip$'
+GZ_RE='\.gz$'
+TGZ_RE='\.(tar.gz|tgz)$'
+TARBZ_RE='\.(tar.bz2)$'
+TAR_RE='\.(tar)$'
+
+if [[ "$CUR_DIR/$HOVERED_FILE" =~ $TGZ_RE ]]; then
+    tar -zxf "$CUR_DIR/$HOVERED_FILE"
+elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $TARBZ_RE ]]; then
+    tar -jxf "$CUR_DIR/$HOVERED_FILE"
+elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $TAR_RE ]]; then
+    tar -xf "$CUR_DIR/$HOVERED_FILE"
+elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $ZIP_RE ]]; then
+    unzip "$CUR_DIR/$HOVERED_FILE"
+elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $GZ_RE ]]; then
+    gunzip "$CUR_DIR/$HOVERED_FILE"
+else
+    echo "Did not recognize file extension"
+    exit 1
+fi
+
+echo "refresh" >> "$CMD_FILE"
