@@ -1,29 +1,96 @@
-#!/bin/bash -x
+#!/bin/bash
 
 source "$(dirname $0)/helper.sh"
 
 echo $CUR_DIR
 echo $HOVERED_FILE
 
+# Ask BFM to refresh no matter what
+echo "refresh" >> "$CMD_FILE"
+
+
+onedir() {
+    DIR=""
+    local SINGLE_DIR=1
+    local DIRS=0
+    #-r  raw input - disables interpretion of backslash escapes and line-continuation in the read data
+    while IFS= read -r line; do
+        # echo "$line"
+        if [[ "$line" == "." ]]; then
+            :
+        elif [[ "$line" == ".." ]]; then
+            :
+        elif [[ -d "$EXTDIR/$line" ]]; then
+            # echo "Adding to DIRS for $line"
+            ((DIRS++))
+            DIR="$line"
+        else
+            # echo "$line is not a dir"
+            SINGLE_DIR=0
+        fi
+    done < <(ls -a1 -- "$EXTDIR")
+
+    if [[ $SINGLE_DIR == 1 && $DIRS == 1 ]]; then
+        return 0
+    fi
+    return 1
+}
+
+to_sub() {
+    if onedir; then
+        mv "$EXTDIR/$DIR" "$CUR_DIR/"
+    else
+        DIR="${HOVERED_FILE}_DIR"
+        mkdir "$STEM"
+        (
+            shopt -s dotglob
+            mv "$EXTDIR"/* "$STEM/"
+        )
+    fi
+}
+
+
+# Extract everything to a TMP dir and see if there is a containing folder
+EXTDIR=$(mktemp -d) || die "Error creating temp directory for extraction"
+trap 'rm -rf -- "$EXTDIR"' EXIT
+
 ZIP_RE='\.zip$'
 GZ_RE='\.gz$'
-TGZ_RE='\.(tar.gz|tgz)$'
-TARBZ_RE='\.(tar.bz2)$'
+TARGZ_RE='\.tar\.gz$'
+TGZ_RE='\.tgz$'
+TARBZ_RE='\.tar\.bz2$'
 TAR_RE='\.(tar)$'
 
-if [[ "$CUR_DIR/$HOVERED_FILE" =~ $TGZ_RE ]]; then
+if [[ "$CUR_DIR/$HOVERED_FILE" =~ $TARGZ_RE ]]; then
     tar -zxf "$CUR_DIR/$HOVERED_FILE"
+    # Works in Bash 3.2 (macOS), unlike ${HOVERED_FILE::-4}
+    STEM=${HOVERED_FILE%???????}
+    to_sub
+
+elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $TGZ_RE ]]; then
+    tar -zxf "$CUR_DIR/$HOVERED_FILE"
+    STEM=${HOVERED_FILE%????}
+    to_sub
+
 elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $TARBZ_RE ]]; then
+    STEM=${HOVERED_FILE%????????}
     tar -jxf "$CUR_DIR/$HOVERED_FILE"
+    to_sub
+
 elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $TAR_RE ]]; then
+    STEM=${HOVERED_FILE%????}
     tar -xf "$CUR_DIR/$HOVERED_FILE"
+    to_sub
+
 elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $ZIP_RE ]]; then
-    unzip "$CUR_DIR/$HOVERED_FILE"
+    STEM=${HOVERED_FILE%????}
+    unzip -d "$EXTDIR" "$CUR_DIR/$HOVERED_FILE"
+    to_sub
+
 elif [[ "$CUR_DIR/$HOVERED_FILE" =~ $GZ_RE ]]; then
     gunzip "$CUR_DIR/$HOVERED_FILE"
+
 else
     echo "Did not recognize file extension"
     exit 1
 fi
-
-echo "refresh" >> "$CMD_FILE"
