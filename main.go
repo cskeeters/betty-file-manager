@@ -98,7 +98,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case runPluginFinishedMsg:
 		if msg.err != nil {
 			log.Printf("error running %s: %s", msg.pluginpath, msg.err)
-			return m, tea.Quit
+			return m, m.HandlePluginRunError(msg)
 		}
 		return m, m.runPluginCommands(msg.cmdpath)
 

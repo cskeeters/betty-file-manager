@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"bufio"
 	"os"
 	"log"
@@ -61,9 +62,24 @@ func (m *model) RunPlugin(pluginpath string, args ...string) tea.Cmd {
 	args = append([]string{cmdpath}, args...)   // $2
 	args = append([]string{statepath}, args...) // $1
 
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
 	c := exec.Command(pluginpath, args...) //nolint:gosec
+
+	// Assign stdout and stderr for the subprocess to the buffers
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return runPluginFinishedMsg{pluginpath, statepath, cmdpath, err}
+		return runPluginFinishedMsg{
+			pluginpath,
+			statepath,
+			cmdpath,
+			err,
+			stdout,
+			stderr,
+		}
 	})
 }
 

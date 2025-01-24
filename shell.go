@@ -111,3 +111,53 @@ func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
 	// Set errok so there is no infinite loop if less isn't installed
 	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
 }
+
+func (m *model) HandlePluginRunError(msg runPluginFinishedMsg) tea.Cmd {
+
+	//Create tmp file and write error info for displaying to the user
+	tmpdir := os.Getenv("TMPDIR")
+
+	t, err := os.CreateTemp(tmpdir, "M-ERROR-")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Write to the log file
+	log.Printf("Error running: %s", msg.pluginpath)
+	log.Printf("Created TMP File: %s", t.Name())
+
+
+	// Create file for error display
+	fwriteln(t, "Error running:\n")
+	fwriteln(t, "  "+msg.pluginpath)
+	fwriteln(t, "")
+
+	fwriteln(t, "STDOUT:")
+
+	// Write each line with two space indent for readability
+	line, err := msg.stdout.ReadString('\n')
+	for err == nil {
+		fwrite(t, "  "+line)
+		line, err = msg.stdout.ReadString('\n')
+	}
+
+
+	fwriteln(t, "STDERR:")
+
+	// Write each line with two space indent for readability
+	line, err = msg.stderr.ReadString('\n')
+	for err == nil {
+		fwrite(t, "  "+line)
+		line, err = msg.stderr.ReadString('\n')
+	}
+
+	// Close the tmp file
+	err = t.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Set errok so there is no infinite loop if less isn't installed
+	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
+}
+

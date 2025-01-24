@@ -19,8 +19,22 @@ import (
 )
 
 type cdMsg string
-type runFinishedMsg struct{ errok bool; cmd string; args []string; err error; stderr bytes.Buffer}
-type runPluginFinishedMsg struct{ pluginpath string; statepath, cmdpath string; err error }
+type runFinishedMsg struct {
+	errok bool;
+	cmd string;
+	args []string;
+	err error;
+	stderr bytes.Buffer
+}
+
+type runPluginFinishedMsg struct {
+	pluginpath string;
+	statepath,
+	cmdpath string;
+	err error
+	stdout bytes.Buffer; // Nice for debugging
+	stderr bytes.Buffer;
+}
 type refreshMsg int
 type renameFinishedMsg string
 type bulkRenameFinishedMsg struct { tmppath string; src_names []string }
