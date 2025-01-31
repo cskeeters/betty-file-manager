@@ -2,13 +2,6 @@
 
 source "$(dirname $0)/helper.sh"
 
-echo $CUR_DIR
-echo $HOVERED_FILE
-
-# Ask BFM to refresh no matter what
-echo "refresh" >> "$CMD_FILE"
-
-
 onedir() {
     DIR=""
     local SINGLE_DIR=1
@@ -40,7 +33,6 @@ to_sub() {
     if onedir; then
         mv "$EXTDIR/$DIR" "$CUR_DIR/"
     else
-        DIR="${HOVERED_FILE}_DIR"
         mkdir "$STEM"
         (
             shopt -s dotglob
@@ -49,6 +41,13 @@ to_sub() {
     fi
 }
 
+# Ask BFM to refresh no matter what
+echo "refresh" >> "$CMD_FILE"
+
+echo $CUR_DIR
+echo $HOVERED_FILE
+
+cd $CUR_DIR
 
 # Extract everything to a TMP dir and see if there is a containing folder
 EXTDIR=$(mktemp -d) || die "Error creating temp directory for extraction"
