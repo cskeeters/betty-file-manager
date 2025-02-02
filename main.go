@@ -210,19 +210,19 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "a":
 				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzcd"))
+				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/fzcd"))
 
 			// Pressing ctrl+/ sends ctrl+_ on VT102 compatible terminals such as iTerm2 and alacritty
 			case "ctrl+_": // Jump to sub file/dir by FZF selection
 				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/fzjump"))
+				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/fzjump"))
 
 			case "J": // autojump (I'm feeling lucky)
 				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"))
+				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/autojump"))
 			case "ctrl+j": // fzf on autojump results
 				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/autojump"), "FZF")
+				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/autojump"), "FZF")
 
 			// Sorting
 			case "n":
@@ -295,7 +295,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
 				} else {
 					home := os.Getenv("HOME")
-					return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
+					return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
 				}
 			case "V": // Vim
 				return m, Run(false, ct.directory, "nvim")

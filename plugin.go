@@ -83,6 +83,29 @@ func (m *model) RunPlugin(pluginpath string, args ...string) tea.Cmd {
 	})
 }
 
+func (m *model) RunInteractivePlugin(pluginpath string, args ...string) tea.Cmd {
+	statepath := m.writeState()
+	cmdpath := m.createCmd()
+
+	args = append([]string{cmdpath}, args...)   // $2
+	args = append([]string{statepath}, args...) // $1
+
+
+	c := exec.Command(pluginpath, args...) //nolint:gosec
+
+	return tea.ExecProcess(c, func(err error) tea.Msg {
+		var empty bytes.Buffer
+		return runPluginFinishedMsg{
+			pluginpath,
+			statepath,
+			cmdpath,
+			err,
+			empty,
+			empty,
+		}
+	})
+}
+
 func (m *model) toTeaCmd(cmd string) tea.Cmd {
 	log.Printf("Processing %s", cmd)
 
