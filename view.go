@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -303,8 +304,8 @@ func (m *model) generateContent() string {
 			maxNameWidth = maxNameWidth - 6 - 6
 		}
 		name := truncateFileName(f.Name(), maxNameWidth)
-		nameWidth := len(name)
-		spaceWidth := maxNameWidth - nameWidth
+		nameWidth := utf8.RuneCountInString(name)
+		spaceWidth := maxNameWidth - nameWidth - 1
 
 		text := fmt.Sprintf("%s %-"+strconv.Itoa(nameWidth)+"s", icon, name)
 		space := ""
