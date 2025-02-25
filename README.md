@@ -9,9 +9,9 @@ Currently bfm can only be installed by cloning the repository, compiling, and ma
     git clone https://github.com/cskeeters/betty-file-manager.git --branch master --single-branch
     cd betty-file-manager
     go mod tidy
-    go build
-    cp bfm /usr/local/bin/
-    mkdir ~/.config/bfm
+    make # Runs go build
+    sudo cp bfm /usr/local/bin/
+    mkdir -p ~/.config/bfm
     cp -rp plugins ~/.config/bfm
 
 # Usage
