@@ -129,13 +129,13 @@ func (m *model) handleResize(msg tea.WindowSizeMsg) {
 		// we can initialize the viewport. The initial dimensions come in
 		// quickly, though asynchronously, which is why we wait for them
 		// here.
-		m.viewport = viewport.New(msg.Width, m.viewportHeight)
+		m.viewport = viewport.New(msg.Width*3, m.viewportHeight)
 		m.viewport.YPosition = headerHeight
 		m.viewport.SetContent("")
 		m.firstResize = true
 
 	} else {
-		m.viewport.Width = msg.Width
+		m.viewport.Width = msg.Width*3
 		m.viewport.Height = msg.Height - verticalMarginHeight
 	}
 	m.viewport.SetContent(m.generateContent())
