@@ -149,7 +149,8 @@ func (td *tabData) filtered(file fs.DirEntry) bool {
 		pattern := buildPattern(filter)
 		matches, err := regexp.MatchString(pattern, LowerIf(file.Name(), alllower))
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			return false
 		}
 		// If any pattern does not match, filter the file
 		if !matches {
