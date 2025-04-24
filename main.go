@@ -455,7 +455,7 @@ func main() {
 	m.scrollProgress = progress.New(progress.WithScaledGradient("#FF7CCB", "#FDFF8C"))
 
 	// Create a new tea program and run it.
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithoutBracketedPaste())
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
