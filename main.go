@@ -261,6 +261,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "P": // Open with Preview.app
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/preview"))
+			case "O": // Open with Acrobat.app
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/acrobat"))
 
 			case "e": // Edit
 				if os.Getenv("TMUX") != "" {
