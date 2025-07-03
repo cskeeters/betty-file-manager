@@ -10,9 +10,15 @@ Currently bfm can only be installed by cloning the repository, compiling, and ma
     cd betty-file-manager
     go mod tidy
     make # Runs go build
-    sudo cp bfm /usr/local/bin/
+    sudo make install
     mkdir -p ~/.config/bfm
     cp -rp plugins ~/.config/bfm
+
+NOTE: `sudo make install` will run `codesign` to ensure that macOS doesn't issue SIGKILL as the program starts, which can result in *Killed: -9*.  This is prevented with:
+
+```sh
+sudo codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime /usr/local/bin/bfm
+```
 
 # Usage
 
