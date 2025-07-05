@@ -195,8 +195,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return m, cd(filepath.Dir(ct.directory))
 
 			case "l", "enter":
-				if m.isHoveredDir() {
-					return m, cd(m.getHoveredPath())
+				if m.isHoveredValid() {
+					if m.isHoveredDir() {
+						return m, cd(m.getHoveredPath())
+					}
 				}
 
 			case "~":

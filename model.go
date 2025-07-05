@@ -64,6 +64,15 @@ func (m *model) getHoveredPath() string {
 	return filepath.Join(m.CurrentTab.directory, de.Name())
 }
 
+// Returns true if the cursor points at a valid file
+func (m *model) isHoveredValid() bool {
+	ct := m.CurrentTab
+	if len(ct.filteredFiles) > ct.cursor {
+		return true
+	}
+	return false
+}
+
 // Returns true if the hovered file is a directory
 func (m *model) isHoveredDir() bool {
 	ct := m.CurrentTab
