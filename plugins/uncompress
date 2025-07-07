@@ -53,12 +53,12 @@ cd $CUR_DIR
 EXTDIR=$(mktemp -d) || die "Error creating temp directory for extraction"
 trap 'rm -rf -- "$EXTDIR"' EXIT
 
-ZIP_RE='\.zip$'
-GZ_RE='\.gz$'
 TARGZ_RE='\.tar\.gz$'
 TGZ_RE='\.tgz$'
 TARBZ_RE='\.tar\.bz2$'
 TAR_RE='\.(tar)$'
+ZIP_RE='\.zip$'
+GZ_RE='\.gz$'
 
 if [[ "$CUR_DIR/$HOVERED_FILE" =~ $TARGZ_RE ]]; then
     tar -zxf "$CUR_DIR/$HOVERED_FILE"
