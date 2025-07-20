@@ -100,7 +100,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			log.Printf("error running %s: %s", msg.pluginpath, msg.err)
 			return m, m.HandlePluginRunError(msg)
 		}
-		return m, m.runPluginCommands(msg.cmdpath)
+		return m, msg.tea_cmds
 
 	case renameFinishedMsg:
 		return m, m.FinishRename(string(msg))

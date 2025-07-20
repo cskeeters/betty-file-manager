@@ -29,8 +29,7 @@ type runFinishedMsg struct {
 
 type runPluginFinishedMsg struct {
 	pluginpath string;
-	statepath,
-	cmdpath string;
+	tea_cmds tea.Cmd;
 	err error
 	stdout bytes.Buffer; // Nice for debugging
 	stderr bytes.Buffer;

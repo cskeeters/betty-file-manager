@@ -16,7 +16,7 @@ func (m *model) writeState() string {
 
 	tmpdir := os.Getenv("TMPDIR")
 
-	t, err := os.CreateTemp(tmpdir, "M-STATE-")
+	t, err := os.CreateTemp(tmpdir, "BFM-STATE-")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func (m *model) writeState() string {
 func (m *model) createCmd() string {
 	tmpdir := os.Getenv("TMPDIR")
 
-	t, err := os.CreateTemp(tmpdir, "M-CMD-")
+	t, err := os.CreateTemp(tmpdir, "BFM-CMD-")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,10 +72,15 @@ func (m *model) RunPlugin(pluginpath string, args ...string) tea.Cmd {
 	c.Stderr = &stderr
 
 	return tea.ExecProcess(c, func(err error) tea.Msg {
+		tea_cmds := m.runPluginCommands(cmdpath)
+
+		os.Remove(statepath)
+		os.Remove(cmdpath)
+
+
 		return runPluginFinishedMsg{
 			pluginpath,
-			statepath,
-			cmdpath,
+			tea_cmds,
 			err,
 			stdout,
 			stderr,
@@ -94,11 +99,15 @@ func (m *model) RunInteractivePlugin(pluginpath string, args ...string) tea.Cmd 
 	c := exec.Command(pluginpath, args...) //nolint:gosec
 
 	return tea.ExecProcess(c, func(err error) tea.Msg {
+		tea_cmds := m.runPluginCommands(cmdpath)
+
+		os.Remove(statepath)
+		os.Remove(cmdpath)
+
 		var empty bytes.Buffer
 		return runPluginFinishedMsg{
 			pluginpath,
-			statepath,
-			cmdpath,
+			tea_cmds,
 			err,
 			empty,
 			empty,
