@@ -320,8 +320,10 @@ func (m *model) MkDir() tea.Cmd {
 	c := exec.Command(Editor(), t.Name()) //nolint:gosec
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		if (err == nil) {
+			// FinishMkDir will remove the temp file
 			return mkdirFinishedMsg(t.Name())
 		} else {
+			defer os.Remove(t.Name())
 			log.Printf("User cancelled rename with cq")
 			return refresh()
 		}
@@ -335,6 +337,7 @@ func (m *model) FinishMkDir(f string) tea.Cmd {
 		return nil
 	}
 	defer file.Close()
+	defer os.Remove(f)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -358,8 +361,6 @@ func (m *model) FinishMkDir(f string) tea.Cmd {
 			log.Printf("Made directory %s", dst)
 		}
 	}
-
-	os.Remove(f)
 
 	// when scanner.Scan returns false, check for error
 	if err := scanner.Err(); err != nil {
@@ -407,8 +408,10 @@ func (m *model) RenameFile() tea.Cmd {
 	c := exec.Command(Editor(), t.Name()) //nolint:gosec
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		if (err == nil) {
+			// This will remove the temp file once the contents is used
 			return renameFinishedMsg(t.Name())
 		} else {
+			os.Remove(t.Name())
 			log.Printf("User cancelled rename with cq")
 			return refresh()
 		}
@@ -476,8 +479,10 @@ func (m *model) BulkRename() tea.Cmd {
 	c := exec.Command(Editor(), t.Name()) //nolint:gosec
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		if (err == nil) {
+			// This will remove the temp file once the contents is used
 			return bulkRenameFinishedMsg{t.Name(), src_names}
 		} else {
+			os.Remove(t.Name())
 			log.Printf("User cancelled rename with cq")
 			return refresh()
 		}
@@ -493,6 +498,7 @@ func (m *model) FinishBulkRename(f string, src_names []string) tea.Cmd {
 		return nil
 	}
 	defer file.Close()
+	defer os.Remove(f)
 
 	var dst_names []string
 	var issues []string
@@ -606,6 +612,7 @@ func (m *model) DuplicateFile() tea.Cmd {
 		if (err == nil) {
 			return duplicateFinishedMsg(t.Name())
 		} else {
+			os.Remove(t.Name())
 			log.Printf("User cancelled duplicate with cq")
 			return refresh()
 		}
@@ -619,6 +626,7 @@ func (m *model) FinishDuplicate(f string) tea.Cmd {
 		return nil
 	}
 	defer file.Close()
+	defer os.Remove(f)
 
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
@@ -627,8 +635,6 @@ func (m *model) FinishDuplicate(f string) tea.Cmd {
 		return nil
 	}
 	dst_name := scanner.Text()
-
-	os.Remove(f)
 
 	ct := m.CurrentTab
 	hoveredFile := ct.filteredFiles[ct.cursor]

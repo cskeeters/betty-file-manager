@@ -109,7 +109,7 @@ func (m *model) HandleRunError(msg runFinishedMsg) tea.Cmd {
 	}
 
 	// Set errok so there is no infinite loop if less isn't installed
-	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
+	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'; rm '%s'", t.Name(), t.Name()))
 }
 
 func (m *model) HandlePluginRunError(msg runPluginFinishedMsg) tea.Cmd {
@@ -158,6 +158,6 @@ func (m *model) HandlePluginRunError(msg runPluginFinishedMsg) tea.Cmd {
 	}
 
 	// Set errok so there is no infinite loop if less isn't installed
-	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", t.Name()))
+	return Run(true, tmpdir, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'; rm '%s'", t.Name(), t.Name()))
 }
 
