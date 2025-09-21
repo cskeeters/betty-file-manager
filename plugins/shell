@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 source "$(dirname $0)/helper.sh"
 
-cd "$CUR_DIR"
 echo "Starting shell"
 bash
 echo "Done"

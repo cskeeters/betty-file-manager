@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 IFS="$(printf '\n\r')"
 
@@ -8,12 +8,7 @@ if ! type fzf >/dev/null 2>&1; then
     exit 1
 fi
 
-export FZF_PREVIEW_DIR_CMD="ls -1"
-if command -v eza; then
-    export FZF_PREVIEW_DIR_CMD="eza --icons=always --color=always -1"
-fi
-
-sel=$(cat $HOME/.paths | fzf -d '\t' --preview '$FZF_PREVIEW_DIR_CMD {1}' --with-nth 2,3,4,5,6 --bind 'enter:execute(echo {1})+abort')
+sel=$(cat $HOME/.paths | fzf --preview 'fzfpreview {1}' -d '\t' --with-nth 2,3,4,5,6 --bind 'enter:become(echo {1})')
 
 if [ -n "$sel" ]; then
     if [ "$sel" = "." ] || { ! [ -d "$sel" ] && ! [ -f "$sel" ]; }; then

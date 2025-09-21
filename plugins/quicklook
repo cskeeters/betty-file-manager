@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+qlmanage -p "${PATHS[@]}" > /dev/null 2>&1 &
+# qlmanage -p "$CUR_DIR/$HOVERED_FILE" > /dev/null 2>&1 &
+# disown # Detach from the script's process group
+
+sleep .05
+
+osascript -e 'tell application "System Events" to set frontmost of process "qlmanage" to true'

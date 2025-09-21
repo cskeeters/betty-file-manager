@@ -34,6 +34,7 @@ type runPluginFinishedMsg struct {
 	stdout bytes.Buffer; // Nice for debugging
 	stderr bytes.Buffer;
 }
+type deselectAllMsg int
 type refreshMsg int
 type renameFinishedMsg string
 type bulkRenameFinishedMsg struct { tmppath string; src_names []string }

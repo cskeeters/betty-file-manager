@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"bufio"
+	"fmt"
 	"os"
 	"log"
 	"os/exec"
@@ -24,11 +25,41 @@ func (m *model) writeState() string {
 	log.Printf("Created TMP File: %s", t.Name())
 
 	fwriteln(t, ct.absdir)
-	if len(ct.filteredFiles) > 0 {
-		fwriteln(t, ct.filteredFiles[ct.cursor].Name())
+
+
+	if len(m.selectedFiles) != 0 {
+
+		for _, sf := range(m.selectedFiles) {
+			fwriteln(t, fmt.Sprintf("%s/%s", sf.directory, sf.file.Name()))
+		}
+
 	} else {
-		fwriteln(t, "")
+
+		if len(ct.filteredFiles) > 0 {
+			hovered := ct.filteredFiles[ct.cursor]
+			fwriteln(t, fmt.Sprintf("%s/%s", ct.absdir, hovered.Name()))
+		} else { // No files in current directory
+			fwriteln(t, "")
+		}
 	}
+
+	dst := m.CurrentTab.absdir
+
+	var paths []string
+	var errors []string
+
+	for _, sf := range(m.selectedFiles) {
+		if (sf.directory == m.CurrentTab.absdir) {
+			errors = append(errors, fmt.Sprintf("%s is already in %s", sf.file.Name(), dst))
+		} else {
+			src := fmt.Sprintf("%s/%s", sf.directory, sf.file.Name())
+
+			log.Printf("Moving %s to %s", src, dst)
+			paths = append(paths, src)
+		}
+	}
+
+
 
 	err = t.Close()
 	if err != nil {
@@ -118,13 +149,13 @@ func (m *model) RunInteractivePlugin(pluginpath string, args ...string) tea.Cmd 
 func (m *model) toTeaCmd(cmd string) tea.Cmd {
 	log.Printf("Processing %s", cmd)
 
-	cdr := regexp.MustCompile("cd (.*)")
+	cdr := regexp.MustCompile("^cd (.*)")
 	captures := cdr.FindStringSubmatch(cmd)
 	if captures != nil {
 		return cd(captures[1])
 	}
 
-	selectr := regexp.MustCompile("select (.*)")
+	selectr := regexp.MustCompile("^select (.*)")
 	captures = selectr.FindStringSubmatch(cmd)
 	if captures != nil {
 		return selectFile(captures[1])
@@ -132,6 +163,10 @@ func (m *model) toTeaCmd(cmd string) tea.Cmd {
 
 	if cmd == "refresh" {
 		return refresh()
+	}
+
+	if cmd == "deselect all" {
+		return deselectAll()
 	}
 
 	return nil
@@ -165,5 +200,3 @@ func (m *model) runPluginCommands(f string) tea.Cmd {
 
 	return tea.Sequence(teaCmds...)
 }
-
-

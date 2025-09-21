@@ -274,6 +274,11 @@ func (m *model) ClearSelections() {
 	m.selectedFiles = []selectedFile{}
 }
 
+func deselectAll() tea.Cmd {
+	return func () tea.Msg {
+		return deselectAllMsg(0)
+	}
+}
 
 func (m *model) DeselectAll() tea.Cmd {
 	m.ClearSelections()

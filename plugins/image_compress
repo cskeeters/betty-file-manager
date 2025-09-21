@@ -1,0 +1,44 @@
+#!/usr/bin/env sh
+#!/opt/homebrew/bin/bash -x
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+if ! type fzf >/dev/null 2>&1; then
+    printf "fzf missing"
+    # read -r _
+    exit 1
+fi
+
+# cd to dir of the current tab so options will be sub-files
+cd "$CUR_DIR"
+
+
+OPTIONS="600 60
+800 60
+1200 60
+1600 60
+2048 60
+2048 80"
+
+# Pipe the options into fzf and capture the selection
+SELECTED_OPTION=$(echo "$OPTIONS" | fzf)
+
+QUALITY_RE='^([0-9]+) ([0-9]+)$'
+if [[ $SELECTED_OPTION =~ $QUALITY_RE ]]; then
+    export MAX_LONG_EDGE=${BASH_REMATCH[1]}
+    export JPEG_QUALITY=${BASH_REMATCH[2]}
+
+    mkdir -p compressed
+
+    printf "%s\n" "${PATHS[@]}" | parallel -v 'FPATH={}; magick "$FPATH" -resize "${MAX_LONG_EDGE}x${MAX_LONG_EDGE}>" -quality $JPEG_QUALITY "compressed/${FPATH##*/}"'
+
+    echo "deselect all" >> "$CMD_FILE"
+    echo "cd $CUR_DIR/compressed" >> $CMD_FILE
+    echo "refresh" >> "$CMD_FILE"
+
+    # exit 1
+else
+    die "Did not select a valid option"
+fi

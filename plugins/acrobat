@@ -4,4 +4,7 @@ IFS="$(printf '\n\r')"
 
 source "$(dirname $0)/helper.sh"
 
-open -a Preview.app "${PATHS[@]}"
+echo $CUR_DIR
+
+echo "${PATHS[@]}"
+open -a "Adobe Acrobat.app" "${PATHS[@]}"

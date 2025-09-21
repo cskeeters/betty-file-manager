@@ -117,6 +117,10 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case refreshMsg:
 		return m.handleRefresh()
 
+	case deselectAllMsg:
+		m.DeselectAll()
+		return m, nil
+
 	case tea.KeyMsg:
 		// Having errors is like it's own mode
 		// Any key will clear one error
@@ -266,6 +270,12 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			case "O": // Open with Acrobat.app
 				home := os.Getenv("HOME")
 				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/acrobat"))
+			case "L": // Open with quicklook
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/quicklook"))
+			case "I": // Image Compression
+				home := os.Getenv("HOME")
+				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/image_compress"))
 
 			case "e": // Edit
 				if os.Getenv("TMUX") != "" {
