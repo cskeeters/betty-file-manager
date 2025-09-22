@@ -34,11 +34,13 @@ if [[ $SELECTED_OPTION =~ $QUALITY_RE ]]; then
 
     printf "%s\n" "${PATHS[@]}" | parallel -v 'FPATH={}; magick "$FPATH" -resize "${MAX_LONG_EDGE}x${MAX_LONG_EDGE}>" -quality $JPEG_QUALITY "compressed/${FPATH##*/}"'
 
+    STATUS=$?
+
     echo "deselect all" >> "$CMD_FILE"
     echo "cd $CUR_DIR/compressed" >> $CMD_FILE
     echo "refresh" >> "$CMD_FILE"
 
-    # exit 1
+    exit $STATUS
 else
     die "Did not select a valid option"
 fi
