@@ -318,17 +318,17 @@ func (m *model) generateContent() string {
 			fileStyle = directory
 		} else if isSymDir(ct.absdir, f) {
 			fileStyle = symDirectory
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"xlsx") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xlsx") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"xls") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xls") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"xlsm") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xlsm") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"docx") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".docx") {
 			fileStyle = wordDoc
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"doc") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".doc") {
 			fileStyle = wordDoc
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),"pdf") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()),".pdf") {
 			fileStyle = pdf
 		}
 
