@@ -45,54 +45,54 @@ func SetBinding(key, command string) {
 
 func SetDefaultPlugins() {
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "iplugin fzcd",
 		Section: "Navigation",
+		Command: "iplugin fzcd",
 		Help: "Select directory from .paths with FZF",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "iplugin fzjump",
 		Section: "Navigation",
+		Command: "iplugin fzjump",
 		Help: "Jump to sub file/dir by FZF selection",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "iplugin autojump",
 		Section: "Navigation",
+		Command: "iplugin autojump",
 		Help: "autojump (I'm feeling lucky)",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "iplugin autojump FZF",
 		Section: "Navigation",
+		Command: "iplugin autojump FZF",
 		Help: "FZF on autojump results",
 	})
 
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin compress",
 		Section: "Operations",
+		Command: "plugin compress",
 		Help: "Compress file",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin uncompress",
 		Section: "Operations",
+		Command: "plugin uncompress",
 		Help: "Uncompress (extract) file",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin preview",
 		Section: "Operations",
+		Command: "plugin preview",
 		Help: "Open file(s) with Preview.app",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin acrobat",
 		Section: "Operations",
+		Command: "plugin acrobat",
 		Help: "Open file(s) with Acrobat.app",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin quicklook",
 		Section: "Operations",
+		Command: "plugin quicklook",
 		Help: "Open file(s) with Quicklook",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
-		Command: "plugin image_compress",
 		Section: "Operations",
+		Command: "plugin image_compress",
 		Help: "Compress file(s) with magick",
 	})
 }

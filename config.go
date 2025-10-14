@@ -25,8 +25,8 @@ type Binding struct {
 }
 
 type Plugin struct {
-	Command string `toml:"command"`
 	Section string `toml:"section"`
+	Command string `toml:"command"`
 	Help    string `toml:"help"`
 }
 
