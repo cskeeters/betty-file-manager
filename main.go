@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	//"runtime/debug"
@@ -25,12 +26,13 @@ var helpPath string
 var home string
 
 // This will return a tea command that when run will log an error and gracefully exit the bubbletea application
-func panic(err error) tea.Cmd {
-	return func () tea.Msg {
-		return panicMsg(err)
-	}
-}
+//func panic(err error) tea.Cmd {
+//	return func () tea.Msg {
+//		return panicMsg(err)
+//	}
+//}
 
+// Deletes bfm.lastd that holds the last path that was open
 func ClearLastd() {
 	lastdpath := filepath.Join(home,".local", "state", "bfm.lastd")
 	if _, err := os.Stat(lastdpath); errors.Is(err, os.ErrNotExist) {
@@ -55,6 +57,10 @@ func (m *model) writeLastd() {
 func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	log.Printf("DEBUG: Proccessing message %T", message)
 	ct := m.CurrentTab
+
+	var plugin_re = regexp.MustCompile(`^plugin ([^\s]+)( .*)?`)
+	var iplugin_re = regexp.MustCompile(`^iplugin ([^\s]+)( .*)?`)
+	// var run_re = regexp.MustCompile(`^run (.*)`)
 
 	switch msg := message.(type) {
 	case tea.WindowSizeMsg:
@@ -132,152 +138,120 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.mode == commandMode {
-			log.Printf("DEBUG: Key %s", msg.String())
-			switch msg.String() {
+			command := to_command(msg.String())
+			log.Printf("DEBUG: Key %s -> Command: %s", msg.String(), command)
+			switch {
 
 			//Application
-			case "q", "ctrl+c":
+			case command == "quit":
 				return m, m.CloseTab()
 
-			case "?":
+			case command == "help":
 				// -I Case-Insensitive Searching
 				// -R Raw characters (for color support in terminals)
-				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
+				// return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("LESS=IR less '%s'", helpPath))
+				return m, ShowHelp()
 
-			case "1":
+			case command == "tab 1":
 				return m, tab(1)
-			case "2":
+			case command == "tab 2":
 				return m, tab(2)
-			case "3":
+			case command == "tab 3":
 				return m, tab(3)
-			case "4":
+			case command == "tab 4":
 				return m, tab(4)
-			case "5":
+			case command == "tab 5":
 				return m, tab(5)
-			case "6":
+			case command == "tab 6":
 				return m, tab(6)
 
-			case "ctrl+s": // View selected files
+			case command == "selected_files":
 				m.mode = selectedMode
 				return m, refresh()
 
-			// Filterning
-			case "/":
+			// Filtering
+			case command == "filter":
 				m.mode = filterMode
 				return m, nil
 
-			case "ctrl+l":
+			case command == "refresh":
 				// Don't use SetFilter, because we don't need to re-sort before we refresh
 				ct.filter = ""
 				//m.viewport.GotoTop()
 				return m.handleRefresh()
 
-			//Cursor Movement
-			case "j", "down":
+			// Cursor Movement
+			case command == "down":
 				m.MoveCursor(1)
-			case "k", "up":
+			case command == "up":
 				m.MoveCursor(-1)
 
-			case "g":
+			case command == "top":
 				m.MoveCursorTop()
-			case "G":
+			case command == "bottom":
 				m.MoveCursorBottom()
 
-			case "ctrl+d":
+			case command == "down_half":
 				m.MoveCursor(m.viewportHeight / 2)
-			case "ctrl+u":
+			case command == "up_half":
 				m.MoveCursor(-(m.viewportHeight / 2))
 
-			case "]":
+			case command == "next_selected":
 				m.MoveNextSelected()
-			case "[":
+			case command == "prev_selected":
 				m.MovePrevSelected()
 
 			// Navigation
-			case "h", "-", "backspace":
+			case command == "up_directory":
 				// Go up a directory
 				return m, cd(filepath.Dir(ct.directory))
 
-			case "l", "enter":
+			case command == "enter_directory":
 				if m.isHoveredValid() {
 					if m.isHoveredDir() {
 						return m, cd(m.getHoveredPath())
 					}
 				}
 
-			case "~":
+			case command == "home":
 				usr, _ := user.Current()
 				return m, cd(usr.HomeDir)
 
-			case "ctrl+o":
+			case command == "history_back":
 				return m, m.GoHistoryBack()
-			case "tab": // "ctrl+i" issues tab
+			case command == "history_forward": // "ctrl+i" issues tab
 				return m, m.GoHistoryForward()
 
-			case "a":
-				home := os.Getenv("HOME")
-				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/fzcd"))
-
-			// Pressing ctrl+/ sends ctrl+_ on VT102 compatible terminals such as iTerm2 and alacritty
-			case "ctrl+_": // Jump to sub file/dir by FZF selection
-				home := os.Getenv("HOME")
-				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/fzjump"))
-
-			case "J": // autojump (I'm feeling lucky)
-				home := os.Getenv("HOME")
-				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/autojump"))
-			case "ctrl+j": // fzf on autojump results
-				home := os.Getenv("HOME")
-				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/autojump"), "FZF")
-
 			// Sorting
-			case "n":
+			case command == "sort_name":
 				ct.SetSort(nameSort)
 				m.viewport.GotoTop()
-			case "m":
+			case command == "sort_modified":
 				ct.SetSort(modifiedSort)
 				m.viewport.GotoTop()
-			case "z":
+			case command == "sort_size":
 				ct.SetSort(sizeSort)
 				m.viewport.GotoTop()
 
 			// Selection
-			case "s": // Select
+			case command == "select":
 				m.ToggleSelected()
 				m.MoveCursor(1)
-			case "A":
+			case command == "select_all":
 				return m, m.SelectAll()
-			case "d":
+			case command == "deselect_all":
 				return m, m.DeselectAll()
 
 			// Operations
-			case "v":
+			case command == "move":
 				return m, m.MoveFiles()
-			case "p":
+			case command == "copy":
 				return m, m.CopyFiles()
 
-			case "o": // Open
+			case command == "open":
 				return m, m.OpenFiles()
-			case "U": // Uncompress
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/uncompress"))
-			case "C": // Compress
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/compress"))
-			case "P": // Open with Preview.app
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/preview"))
-			case "O": // Open with Acrobat.app
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/acrobat"))
-			case "L": // Open with quicklook
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/quicklook"))
-			case "I": // Image Compression
-				home := os.Getenv("HOME")
-				return m, m.RunPlugin(filepath.Join(home, ".config/bfm/plugins/image_compress"))
 
-			case "e": // Edit
+			case command == "edit":
 				if os.Getenv("TMUX") != "" {
 					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
@@ -285,39 +259,67 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 					return m, Run(false, ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
 				}
 
-			case "N":
+			case command == "mkdirs":
 				return m, m.MkDir()
 
-			case "D":
+			case command == "duplicate":
 				return m, m.DuplicateFile()
 
-			case "R":
+			case command == "rename":
 				return m, m.RenameFile()
-			case "ctrl+r":
+			case command == "bulk_rename":
 				return m, m.BulkRename()
 
-			case "T":
+			case command == "trash":
 				// https://github.com/morgant/tools-osx
 				return m, m.TrashFiles()
-			case "X":
+			case command == "remove":
 				return m, m.RemoveFiles()
 
-			case "F": // Finder
+			// This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
+			case command == "cat_to_null": // Cat to Null
+				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
+
+			case command == "files": // Finder
 				// User may need to define an alias open for linux
 				return m, Run(false, ct.directory, "open", ct.directory)
-			case "S": // Shell
+
+			case command == "shell": // Shell
 				if os.Getenv("TMUX") != "" {
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", "BASH", "bash")
 				} else {
 					home := os.Getenv("HOME")
 					return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/shell"))
 				}
-			case "V": // Vim
-				return m, Run(false, ct.directory, "nvim")
+			case command == "editor":
+				editor := os.Getenv("EDITOR")
+				return m, Run(false, ct.directory, editor)
 
-			// This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
-			case "ctrl+n": // Cat to Null
-				return m, Run(false, ct.directory, "bash", "-c", fmt.Sprintf("cat '%s' > /dev/null", ct.filteredFiles[ct.cursor].Name()))
+			case iplugin_re.MatchString(command):
+				captures := iplugin_re.FindStringSubmatch(command)
+				if captures == nil {
+					fmt.Printf("Plugin not specified in command %s\n", command)
+				}
+
+				plugin := captures[1]
+				args := strings.Fields(captures[2])
+
+				home := os.Getenv("HOME")
+				plugin_path := filepath.Join(home, ".config/bfm/plugins", plugin)
+				return m, m.RunInteractivePlugin(plugin_path, args...)
+
+			case plugin_re.MatchString(command):
+				captures := plugin_re.FindStringSubmatch(command)
+				if captures == nil {
+					fmt.Printf("Plugin not specified in command %s\n", command)
+				}
+
+				plugin := captures[1]
+				args := strings.Fields(captures[2])
+
+				home := os.Getenv("HOME")
+				plugin_path := filepath.Join(home, ".config/bfm/plugins", plugin)
+				return m, m.RunPlugin(plugin_path, args...)
 
 			}
 			m.viewport.SetContent(m.generateContent())
@@ -414,7 +416,7 @@ func getStartDir(args []string) string {
 
 		realpath, err := resolveSymLink(absdir)
 		if err != nil {
-			log.Printf("error getting real path for "+absdir)
+			log.Print("error getting real path for "+absdir)
 			return curDir
 		}
 
@@ -435,8 +437,6 @@ func main() {
 	// we only want the lastd file to be valid if we exit cleanly
 	ClearLastd()
 
-	LoadConfig()
-
 	os.MkdirAll(filepath.Dir(logpath), 0755)
 
 	f, err := os.OpenFile(logpath, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
@@ -446,7 +446,7 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	writeHelp(generateHelp())
+	LoadConfig()
 
 	startDir := getStartDir(os.Args)
 

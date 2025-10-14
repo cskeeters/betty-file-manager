@@ -215,11 +215,11 @@ MacOS decided that folders that sync to Dropbox or OneDrive should live in ~/Lib
 
 Create `~/.config/bfm/bfmrc`
 
-    [[WdReplacement]]
+    [[wd_replacements]]
     real = "Library/CloudStorage/OneDrive-CompanyName"
     repl = "=OneDrive="
 
-    [[WdReplacement]]
+    [[wd_replacements]]
     real = "Library/CloudStorage/OneDrive-SharedLibraries-CompanyName"
     repl = "=OneDrive Shared="
 

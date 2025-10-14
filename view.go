@@ -130,7 +130,7 @@ func compressCWD(path string) string {
 	}
 
 	// Replace strings specified in bfmrc (to reduce working directory length)
-	for _, wdr := range config.WdReplacement {
+	for _, wdr := range config.WdReplacements {
 		path = strings.Replace(path, wdr.Real, wdr.Repl, 1)
 	}
 
@@ -176,7 +176,7 @@ func (m model) headerView() string {
 
 	doc.WriteString("\n") // Heading-Files Separator
 
-	return fmt.Sprintf(doc.String())
+	return fmt.Sprint(doc.String())
 }
 
 func renderModeStatus(mode int) string {
@@ -202,11 +202,11 @@ func renderStats(tab *tabData) string {
 	return rStats(fmt.Sprintf("%d/%d", tab.cursor+1, len(tab.filteredFiles)))
 }
 
-func (m *model) renderScrollStatus() string {
-	m.scrollProgress.Width = 20
-	m.scrollProgress.ShowPercentage = false
-	return m.scrollProgress.ViewAs(m.viewport.ScrollPercent())
-}
+//func (m *model) renderScrollStatus() string {
+//	m.scrollProgress.Width = 20
+//	m.scrollProgress.ShowPercentage = false
+//	return m.scrollProgress.ViewAs(m.viewport.ScrollPercent())
+//}
 
 func (m *model) renderSelectedStatus() string {
 	if len(m.selectedFiles) == 0 {

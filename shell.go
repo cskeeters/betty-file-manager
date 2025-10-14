@@ -56,6 +56,30 @@ func RunBlock(prog string, args ...string) runInfo {
 	return info
 }
 
+func ShowHelp() tea.Cmd {
+	// -I Ignore Case
+	// -R Raw Characters
+	c := exec.Command("less", "-RI")
+
+	// Override any LESS settings
+	c.Env = append(c.Env, "LESS=")
+
+	if os.Getenv("TERM") == "xterm-ghostty" {
+		c.Env = append(c.Env, "TERM=xterm-256color") // less doesn't support xterm-ghostty?
+	} else if os.Getenv("TERM") != "" {
+		// You do have to set this, otherwise it will be "dumb"
+		c.Env = append(c.Env, "TERM="+os.Getenv("TERM"))
+	}
+
+	c.Stdin = strings.NewReader(generateHelp())
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+
+	var stderr bytes.Buffer // Not used but required for runFinishedMsg
+	return tea.ExecProcess(c, func(err error) tea.Msg {
+		return runFinishedMsg{true, "help", []string{}, err, stderr}
+	})
+}
 
 // Supports command in specified directory
 func Run(errok bool, dir, cmd string, args ...string) tea.Cmd {

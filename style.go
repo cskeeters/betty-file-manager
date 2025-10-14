@@ -38,6 +38,7 @@ var (
 	tabBgColor = sortBgColor
 
 	helpSectionColor = lipgloss.AdaptiveColor{Light: "#000050", Dark: "#80A0FF"}
+	helpPluginsColor = lipgloss.AdaptiveColor{Light: "#000050", Dark: "#A080FF"}
 	helpKeyColor = filterBgColor
 	helpDescColor = lipgloss.AdaptiveColor{Light: "#000050", Dark: "#FFFFFF"}
 
@@ -55,7 +56,7 @@ var (
 
 	rSection = lipgloss.NewStyle().
 		Foreground(helpSectionColor).
-		Padding(1, 0).
+		PaddingBottom(1).
 		Render
 
 	rKey = lipgloss.NewStyle().
