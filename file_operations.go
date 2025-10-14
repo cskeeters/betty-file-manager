@@ -354,7 +354,7 @@ func (m *model) FinishMkDir(f string) tea.Cmd {
 			dst := filepath.Join(m.CurrentTab.absdir, dir_name)
 			err = os.Mkdir(dst, 0755)
 			if err != nil {
-				log.Printf(err.Error())
+				log.Printf("%s", err.Error())
 				m.appendError("Error creating directory "+dir_name+":"+err.Error())
 			}
 

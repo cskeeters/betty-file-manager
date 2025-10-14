@@ -38,7 +38,7 @@ func ClearLastd() {
 	}
 	err := os.Remove(lastdpath)
 	if err != nil {
-		log.Printf("Error removing bfm.lastd: "+err.Error())
+		log.Print("Error removing bfm.lastd: "+err.Error())
 	}
 }
 
