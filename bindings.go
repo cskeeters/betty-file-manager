@@ -162,7 +162,7 @@ func SetDefaultBindings() {
 
 	// Operations
 	SetBinding("v",         "move")
-	SetBinding("c",         "copy")
+	SetBinding("p",         "copy")
 	SetBinding("o",         "open")
 	SetBinding("e",         "edit")
 
