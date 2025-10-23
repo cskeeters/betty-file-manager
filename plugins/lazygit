@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+cd "$CUR_DIR"
+lazygit

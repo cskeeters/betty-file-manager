@@ -95,6 +95,11 @@ func SetDefaultPlugins() {
 		Command: "plugin image_compress",
 		Help: "Compress file(s) with magick",
 	})
+	config.Plugins = append(config.Plugins, Plugin{
+		Section: "Operations",
+		Command: "plugin lazygit",
+		Help: "Open lazygit in the current folder",
+	})
 }
 
 func SetDefaultBindings() {
@@ -183,6 +188,7 @@ func SetDefaultBindings() {
 	SetBinding("O",         "plugin acrobat")
 	SetBinding("L",         "plugin quicklook")
 	SetBinding("I",         "plugin image_compress")
+	SetBinding("Z",         "plugin lazygit")
 
 	// This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
 	SetBinding("ctrl+n",    "cat_to_null")
