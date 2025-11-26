@@ -233,13 +233,17 @@ func (m *model) MovePrevSelected() {
 }
 
 func (td *tabData) filterFiles() {
-	if td.filter == "" {
-		td.filteredFiles = td.files
+	td.filteredFiles = []fs.DirEntry{}
+	for _, f := range td.files {
+		// Skip hidden files if showHidden is false
+		if !td.showHidden && strings.HasPrefix(f.Name(), ".") {
+			continue
+		}
 
-	} else {
-		td.filteredFiles = []fs.DirEntry{}
-		for _, f := range td.files {
-			if (!td.filtered(f)) {
+		if td.filter == "" {
+			td.filteredFiles = append(td.filteredFiles, f)
+		} else {
+			if !td.filtered(f) {
 				td.filteredFiles = append(td.filteredFiles, f)
 			}
 		}

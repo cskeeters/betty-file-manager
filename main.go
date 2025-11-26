@@ -180,6 +180,11 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				//m.viewport.GotoTop()
 				return m.handleRefresh()
 
+			case command == "toggle_hidden":
+				ct.showHidden = !ct.showHidden
+				ct.ReRunFilter()
+				return m.handleRefresh()
+
 			// Cursor Movement
 			case command == "down":
 				m.MoveCursor(1)
@@ -457,7 +462,7 @@ func main() {
 	// Create the TeaModel, which contains application state
 	m := model{}
 	for i := 0; i < 6; i++ {
-		m.tabs = append(m.tabs, tabData{active: false})
+		m.tabs = append(m.tabs, tabData{active: false, showHidden: false})
 	}
 
 	m.SelectTab(0)

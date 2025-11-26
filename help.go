@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
-	"fmt"
 	"errors"
-	"strings"
+	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -15,7 +15,7 @@ func lipPad(s string) string {
 	w := lipgloss.Width(s)
 	doc := strings.Builder{}
 	doc.WriteString(s)
-	for i:=0; i<16-w; i++ {
+	for i := 0; i < 16-w; i++ {
 		doc.WriteString(" ")
 	}
 	return doc.String()
@@ -30,7 +30,7 @@ func help_keys(command string) string {
 		if keys == "" {
 			keys = k(key)
 		} else {
-			keys += ","+k(key)
+			keys += "," + k(key)
 		}
 	}
 	return keys
@@ -53,7 +53,6 @@ func writePlugins(doc *strings.Builder, section string) {
 		}
 	}
 }
-
 
 func generateHelp() string {
 	doc := strings.Builder{}
@@ -84,6 +83,7 @@ func generateHelp() string {
 	doc.WriteString(f("    %s - %s\n", p(k("escape")),          d("Cancel filter, back to COMMAND mode")))
 	doc.WriteString(f("    %s - %s\n", p(help_keys("refresh")), d("Clear filter (works in either mode)")))
 	doc.WriteString(f("    %s - %s\n", p(k("ctrl+w")),          d("Backspace until space (delete word)")))
+	doc.WriteString(f("    %s - %s\n", p(k(".")),               d("Toggles visibility of hidden files")))
 
 	writePlugins(&doc, "Filtering")
 
@@ -173,4 +173,3 @@ func writeHelp(help string) {
 		}
 	}
 }
-

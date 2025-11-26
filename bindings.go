@@ -119,6 +119,7 @@ func SetDefaultBindings() {
 	// Filtering
 	SetBinding("/",         "filter")
 	SetBinding("ctrl+l",    "refresh")
+	SetBinding(".",         "toggle_hidden")
 
 	// Cursor Movement
 	SetBinding("j",         "down")

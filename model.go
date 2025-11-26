@@ -27,6 +27,7 @@ type tabData struct {
 	cursor        int
 	filter        string
 	sort          int
+	showHidden    bool
 
 	dirHistoryIndex int
 	dirHistory      []string
