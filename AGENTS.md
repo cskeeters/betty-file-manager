@@ -18,6 +18,9 @@ No linting tools configured. Code follows standard Go formatting.
 ### Formatting
 - Use `gofmt` for code formatting (standard Go tool)
 - Follow standard Go formatting conventions
+- Preserve parameter alignment in `doc.WriteString` calls (e.g., help text formatting)
+  - Align description parameters to consistent column positions
+  - Maintain visual spacing between keys, separators, and descriptions
 
 ### Imports
 - Standard library imports first
