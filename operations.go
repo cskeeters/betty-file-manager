@@ -22,13 +22,13 @@ func (m model) Init() tea.Cmd {
 }
 
 func tab(tabNumber int) tea.Cmd {
-	return func () tea.Msg {
+	return func() tea.Msg {
 		return tabMsg(tabNumber)
 	}
 }
 
 func selectFile(name string) tea.Cmd {
-	return func () tea.Msg {
+	return func() tea.Msg {
 		return selectFileMsg(name)
 	}
 }
@@ -54,7 +54,7 @@ func (m *model) CloseTab() tea.Cmd {
 		return tea.Quit
 	} else {
 		// We Select tab *number* here
-		return tab(tabIndex+1)
+		return tab(tabIndex + 1)
 	}
 }
 
@@ -74,10 +74,10 @@ func (m *model) popTabHistory() int {
 		return -1
 	}
 
-	lastTab := m.tabHistory[len(m.tabHistory) - 1]
+	lastTab := m.tabHistory[len(m.tabHistory)-1]
 
 	//Remove Last Entry
-	m.tabHistory = m.tabHistory[:len(m.tabHistory) - 1]
+	m.tabHistory = m.tabHistory[:len(m.tabHistory)-1]
 	return lastTab
 }
 
@@ -97,7 +97,7 @@ func (m *model) MoveCursor(linesDown int) {
 	ct.cursor = Min(len(ct.filteredFiles)-1, ct.cursor)
 
 	// Scroll viewport if necessary
-	if (linesDown > 0) {
+	if linesDown > 0 {
 		m.checkScrollDown()
 	} else {
 		m.checkScrollUp()
@@ -111,7 +111,7 @@ func (m *model) MoveCursorTop() {
 
 func (m *model) MoveCursorBottom() {
 	ct := m.CurrentTab
-	m.MoveCursor(len(ct.filteredFiles)-1-ct.cursor)
+	m.MoveCursor(len(ct.filteredFiles) - 1 - ct.cursor)
 }
 
 func (m *model) handleResize(msg tea.WindowSizeMsg) {
@@ -121,7 +121,7 @@ func (m *model) handleResize(msg tea.WindowSizeMsg) {
 	footerHeight := lipgloss.Height(m.footerView())
 	verticalMarginHeight := headerHeight + footerHeight
 
-	m.viewportHeight = msg.Height-verticalMarginHeight
+	m.viewportHeight = msg.Height - verticalMarginHeight
 
 	if !m.firstResize {
 		// Since this program is using the full size of the viewport we
@@ -135,7 +135,7 @@ func (m *model) handleResize(msg tea.WindowSizeMsg) {
 		m.firstResize = true
 
 	} else {
-		m.viewport.Width = msg.Width*3
+		m.viewport.Width = msg.Width * 3
 		m.viewport.Height = msg.Height - verticalMarginHeight
 	}
 	m.viewport.SetContent(m.generateContent())
@@ -154,7 +154,7 @@ func (td *tabData) AddHistory(path string) {
 
 func (m *model) GoHistoryBack() tea.Cmd {
 	ct := m.CurrentTab
-	if (ct.dirHistoryIndex == 1) {
+	if ct.dirHistoryIndex == 1 {
 		return nil
 	}
 
@@ -166,7 +166,7 @@ func (m *model) GoHistoryBack() tea.Cmd {
 	err := ct.ChangeDirectory(dir)
 	if err != nil {
 		parent := filepath.Dir(dir)
-		m.appendError("Error getting contents of "+dir+".  Folder may have been removed.  Changing directory to "+parent+".")
+		m.appendError("Error getting contents of " + dir + ".  Folder may have been removed.  Changing directory to " + parent + ".")
 		return cd(parent)
 	}
 	return refresh()
@@ -175,7 +175,7 @@ func (m *model) GoHistoryBack() tea.Cmd {
 func (m *model) GoHistoryForward() tea.Cmd {
 	log.Printf("GoHistoryForward")
 	ct := m.CurrentTab
-	if (ct.dirHistoryIndex > len(ct.dirHistory)-1) {
+	if ct.dirHistoryIndex > len(ct.dirHistory)-1 {
 		return nil
 	}
 
@@ -187,7 +187,7 @@ func (m *model) GoHistoryForward() tea.Cmd {
 	err := ct.ChangeDirectory(dir)
 	if err != nil {
 		parent := filepath.Dir(dir)
-		m.appendError("Error getting contents of "+dir+".  Folder may have been removed.  Changing directory to "+parent+".")
+		m.appendError("Error getting contents of " + dir + ".  Folder may have been removed.  Changing directory to " + parent + ".")
 		return cd(parent)
 	}
 
@@ -196,7 +196,7 @@ func (m *model) GoHistoryForward() tea.Cmd {
 
 func (td *tabData) JumpToFile(name string) {
 	log.Printf("Looking for %s", name)
-	for i, ff := range(td.filteredFiles) {
+	for i, ff := range td.filteredFiles {
 		if ff.Name() == name {
 			log.Printf("Found %s at %d", name, i)
 			td.cursor = i
@@ -207,9 +207,9 @@ func (td *tabData) JumpToFile(name string) {
 
 func (m *model) MoveNextSelected() {
 	indicies := m.SelectedIndicies()
-	for _, si := range(indicies) {
+	for _, si := range indicies {
 		log.Printf("m.CurrentTab.cursor: %d", m.CurrentTab.cursor)
-		if (si > m.CurrentTab.cursor) {
+		if si > m.CurrentTab.cursor {
 			m.CurrentTab.cursor = si
 			break
 		}
@@ -220,9 +220,9 @@ func (m *model) MoveNextSelected() {
 
 func (m *model) MovePrevSelected() {
 	indicies := m.SelectedIndicies()
-	for i:=len(indicies)-1; i>=0; i-- {
+	for i := len(indicies) - 1; i >= 0; i-- {
 		si := indicies[i]
-		if (si < m.CurrentTab.cursor) {
+		if si < m.CurrentTab.cursor {
 			m.CurrentTab.cursor = si
 			break
 		}
@@ -244,13 +244,13 @@ func (td *tabData) filterFiles() {
 		}
 	}
 
-	if (td.sort == nameSort) {
+	if td.sort == nameSort {
 		sort.Sort(ByName(td.filteredFiles))
 	}
-	if (td.sort == modifiedSort) {
+	if td.sort == modifiedSort {
 		sort.Sort(ByMod(td.filteredFiles))
 	}
-	if (td.sort == sizeSort) {
+	if td.sort == sizeSort {
 		sort.Sort(BySize(td.filteredFiles))
 	}
 }
@@ -275,7 +275,7 @@ func (m *model) ClearSelections() {
 }
 
 func deselectAll() tea.Cmd {
-	return func () tea.Msg {
+	return func() tea.Msg {
 		return deselectAllMsg(0)
 	}
 }
@@ -288,7 +288,7 @@ func (m *model) DeselectAll() tea.Cmd {
 
 func (m *model) SelectAll() tea.Cmd {
 	ct := m.CurrentTab
-	for _, f := range(ct.filteredFiles) {
+	for _, f := range ct.filteredFiles {
 		i := m.Selected(ct.absdir, f)
 		if i == -1 {
 			m.Select(ct.absdir, f)

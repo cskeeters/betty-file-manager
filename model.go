@@ -15,39 +15,39 @@ import (
 type selectedFile struct {
 	// Should be run through filepath.Abs
 	directory string
-	file fs.DirEntry
+	file      fs.DirEntry
 }
 
 type tabData struct {
-	active bool
-	directory string
-	absdir string
-	files []fs.DirEntry
+	active        bool
+	directory     string
+	absdir        string
+	files         []fs.DirEntry
 	filteredFiles []fs.DirEntry
-	cursor int
-	filter string
-	sort int
+	cursor        int
+	filter        string
+	sort          int
 
 	dirHistoryIndex int
-	dirHistory []string
+	dirHistory      []string
 }
 
 type model struct {
 	// Application Fields
-	firstResize bool
-	mode int
-	termWidth int
-	termHeight int
-	viewport viewport.Model
+	firstResize    bool
+	mode           int
+	termWidth      int
+	termHeight     int
+	viewport       viewport.Model
 	scrollProgress progress.Model
 	viewportHeight int
 
 	// State Fields
 	CurrentTabIndex int
-	CurrentTab *tabData
-	tabs []tabData
-	tabHistory []int
-	selectedFiles []selectedFile
+	CurrentTab      *tabData
+	tabs            []tabData
+	tabHistory      []int
+	selectedFiles   []selectedFile
 
 	// If an error has occurred, add to this slice and it will present it to the user
 	errors []string
@@ -91,7 +91,7 @@ func (m *model) isHoveredDir() bool {
 // Returns the indicies of files selected in the directory of the current tab
 func (m *model) SelectedIndicies() []int {
 	indicies := []int{}
-	for i, ff := range(m.CurrentTab.filteredFiles) {
+	for i, ff := range m.CurrentTab.filteredFiles {
 		if m.Selected(m.CurrentTab.absdir, ff) != -1 {
 			indicies = append(indicies, i)
 		}
@@ -113,7 +113,7 @@ func (m *model) appendError(msg string) {
 func (m *model) checkScrollDown() {
 	for m.CurrentTab.cursor > m.viewportHeight+m.viewport.YOffset-1 {
 		// cursor off screen low
-		newScrollAmt := m.CurrentTab.cursor - m.viewportHeight+1
+		newScrollAmt := m.CurrentTab.cursor - m.viewportHeight + 1
 		m.viewport.LineDown(newScrollAmt - m.viewport.YOffset)
 	}
 }
@@ -127,11 +127,11 @@ func (m *model) checkScrollUp() {
 
 // Returns index into selectedFiles if selected
 func (m *model) Selected(absdir string, file fs.DirEntry) int {
-	for i, sf := range(m.selectedFiles) {
-		if (sf.directory != absdir) {
+	for i, sf := range m.selectedFiles {
+		if sf.directory != absdir {
 			continue
 		}
-		if (sf.file.Name() == file.Name()) {
+		if sf.file.Name() == file.Name() {
 			return i
 		}
 	}
@@ -142,7 +142,7 @@ func buildPattern(filter string) string {
 	doc := strings.Builder{}
 
 	pre := ""
-	for _, c := range(strings.Split(filter, "")) {
+	for _, c := range strings.Split(filter, "") {
 		doc.WriteString(pre)
 		doc.WriteString(c)
 		pre = ".*"
@@ -154,7 +154,7 @@ func buildPattern(filter string) string {
 func (td *tabData) filtered(file fs.DirEntry) bool {
 	alllower := IsLower(td.filter)
 	filters := strings.Split(LowerIf(td.filter, alllower), " ")
-	for _, filter := range(filters) {
+	for _, filter := range filters {
 		pattern := buildPattern(filter)
 		matches, err := regexp.MatchString(pattern, LowerIf(file.Name(), alllower))
 		if err != nil {

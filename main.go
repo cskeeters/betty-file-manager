@@ -34,13 +34,13 @@ var home string
 
 // Deletes bfm.lastd that holds the last path that was open
 func ClearLastd() {
-	lastdpath := filepath.Join(home,".local", "state", "bfm.lastd")
+	lastdpath := filepath.Join(home, ".local", "state", "bfm.lastd")
 	if _, err := os.Stat(lastdpath); errors.Is(err, os.ErrNotExist) {
 		return
 	}
 	err := os.Remove(lastdpath)
 	if err != nil {
-		log.Print("Error removing bfm.lastd: "+err.Error())
+		log.Print("Error removing bfm.lastd: " + err.Error())
 	}
 }
 
@@ -48,7 +48,7 @@ func (m *model) writeLastd() {
 	ct := m.CurrentTab
 
 	d1 := []byte(ct.directory)
-	err := os.WriteFile(filepath.Join(home,".local", "state", "bfm.lastd"), d1, 0644)
+	err := os.WriteFile(filepath.Join(home, ".local", "state", "bfm.lastd"), d1, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		dir := string(msg)
 		err := ct.ChangeDirectory(dir)
 		if err != nil {
-			m.appendError("Error cding to "+dir+".  Folder may have been removed.  Changing directory to root.")
+			m.appendError("Error cding to " + dir + ".  Folder may have been removed.  Changing directory to root.")
 			return m, cd("/")
 		} else {
 			ct.AddHistory(dir)
@@ -253,7 +253,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 			case command == "edit":
 				if os.Getenv("TMUX") != "" {
-					tmuxcmd := Editor()+" \""+ct.filteredFiles[ct.cursor].Name()+"\""
+					tmuxcmd := Editor() + " \"" + ct.filteredFiles[ct.cursor].Name() + "\""
 					return m, Run(false, ct.directory, "tmux", "new-window", "-n", Editor(), tmuxcmd)
 				} else {
 					return m, Run(false, ct.directory, Editor(), ct.filteredFiles[ct.cursor].Name())
@@ -326,18 +326,18 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.mode == filterMode {
-			if (msg.String() == "esc") {
+			if msg.String() == "esc" {
 				ct.SetFilter("")
 				m.mode = commandMode
-			} else if (msg.String() == "backspace") {
+			} else if msg.String() == "backspace" {
 				if len(ct.filter) > 0 {
 					ct.SetFilter(ct.filter[:len(ct.filter)-1])
 				}
-			} else if (msg.String() == "enter") {
+			} else if msg.String() == "enter" {
 				m.mode = commandMode
-			} else if (msg.String() == "ctrl+l") {
+			} else if msg.String() == "ctrl+l" {
 				ct.SetFilter("")
-			} else if (msg.String() == "ctrl+w") {
+			} else if msg.String() == "ctrl+w" {
 				filter := strings.TrimRight(ct.filter, " ")
 				i := strings.LastIndex(filter, " ")
 
@@ -347,7 +347,7 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 					ct.SetFilter(ct.filter[:i+1])
 				}
 			} else {
-				ct.SetFilter(ct.filter+msg.String())
+				ct.SetFilter(ct.filter + msg.String())
 			}
 			m.viewport.GotoTop()
 			m.viewport.SetContent(m.generateContent())
@@ -410,18 +410,18 @@ func getStartDir(args []string) string {
 		specifiedDir := os.Args[1]
 		absdir, err := filepath.Abs(specifiedDir)
 		if err != nil {
-			log.Print("Error getting absolute path of "+specifiedDir+" "+err.Error())
+			log.Print("Error getting absolute path of " + specifiedDir + " " + err.Error())
 			return curDir
 		}
 
 		realpath, err := resolveSymLink(absdir)
 		if err != nil {
-			log.Print("error getting real path for "+absdir)
+			log.Print("error getting real path for " + absdir)
 			return curDir
 		}
 
 		stat, err := os.Stat(realpath)
-		if (stat.IsDir()) {
+		if stat.IsDir() {
 			return realpath
 		}
 	}
@@ -431,15 +431,15 @@ func getStartDir(args []string) string {
 
 func main() {
 	home = os.Getenv("HOME")
-	logpath := filepath.Join(home,".local/log/bfm.log")
-	helpPath = filepath.Join(home,".local/share/bfm/help-"+version+".txt")
+	logpath := filepath.Join(home, ".local/log/bfm.log")
+	helpPath = filepath.Join(home, ".local/share/bfm/help-"+version+".txt")
 
 	// we only want the lastd file to be valid if we exit cleanly
 	ClearLastd()
 
 	os.MkdirAll(filepath.Dir(logpath), 0755)
 
-	f, err := os.OpenFile(logpath, os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	f, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
@@ -463,7 +463,7 @@ func main() {
 	m.SelectTab(0)
 	err = m.tabs[0].ChangeDirectory(startDir)
 	if err != nil {
-		log.Fatalln("Error changing directory to "+startDir)
+		log.Fatalln("Error changing directory to " + startDir)
 	}
 	m.tabs[0].AddHistory(startDir)
 
