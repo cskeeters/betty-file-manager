@@ -151,6 +151,7 @@ func buildPattern(filter string) string {
 	return doc.String()
 }
 
+// Returns true if the file should be filtered based on the user inputted list of filter patterns (separated by spaces)
 func (td *tabData) filtered(file fs.DirEntry) bool {
 	alllower := IsLower(td.filter)
 	filters := strings.Split(LowerIf(td.filter, alllower), " ")
