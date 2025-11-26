@@ -4,13 +4,14 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"sort"
 	"path/filepath"
+	"sort"
+	"strings"
 
-	"golang.org/x/term"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
 type selectFileMsg string

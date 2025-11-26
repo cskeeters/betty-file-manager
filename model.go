@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"log"
-	"strings"
 	"io/fs"
+	"log"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/viewport"
