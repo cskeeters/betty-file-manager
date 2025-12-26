@@ -161,6 +161,12 @@ func (m *model) toTeaCmd(cmd string) tea.Cmd {
 		return selectFile(captures[1])
 	}
 
+	showr := regexp.MustCompile("^error (.*)")
+	captures = showr.FindStringSubmatch(cmd)
+	if captures != nil {
+		return userError(captures[1])
+	}
+
 	if cmd == "refresh" {
 		return refresh()
 	}

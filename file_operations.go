@@ -19,6 +19,7 @@ import (
 )
 
 type cdMsg string
+type userErrorMsg string
 type runFinishedMsg struct {
 	errok bool;
 	cmd string;
@@ -51,6 +52,12 @@ func refresh() tea.Cmd {
 func cd(path string) tea.Cmd {
 	return func () tea.Msg {
 		return cdMsg(path)
+	}
+}
+
+func userError(msg string) tea.Cmd {
+	return func () tea.Msg {
+		return userErrorMsg(msg)
 	}
 }
 

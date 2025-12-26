@@ -78,6 +78,9 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.GotoTop()
 		}
 
+	case userErrorMsg:
+		m.appendError(string(msg))
+
 	case selectFileMsg:
 		ct.JumpToFile(string(msg))
 		m.viewport.SetContent(m.generateContent())
