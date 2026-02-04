@@ -266,34 +266,6 @@ func (m *model) OpenFiles() tea.Cmd {
 	return refresh()
 }
 
-func (m *model) RemoveFiles() tea.Cmd {
-	var paths []string
-
-	if len(m.selectedFiles) == 0 {
-		ct := m.CurrentTab
-		file := ct.filteredFiles[ct.cursor]
-		path := filepath.Join(ct.absdir, file.Name())
-		log.Printf("Removing %s", path)
-		paths = append(paths, path)
-	} else {
-		for _, sf := range(m.selectedFiles) {
-			path := filepath.Join(sf.directory, sf.file.Name())
-			log.Printf("Removing %s", path)
-			paths = append(paths, path)
-		}
-	}
-
-	args := append([]string{"-rf", "--"}, paths...)
-	info := RunBlock("rm", args...)
-	if info.err != nil {
-		m.appendRunError("Error removing file", info)
-	}
-
-	m.ClearSelections()
-
-	return refresh()
-}
-
 // Allows user to specify name of new directory in EDITOR
 func (m *model) MkDir() tea.Cmd {
 	ct := m.CurrentTab

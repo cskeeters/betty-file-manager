@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+IFS="$(printf '\n\r')"
+
+source "$(dirname $0)/helper.sh"
+
+if ! command -v gum >/dev/null 2>&1; then
+    printf "gum must be installed to remove files"
+    exit 1
+fi
+
+if [[ "${#PATHS[@]}" -gt 1 ]]; then
+
+    FILE_PROMPT=""
+    for FILE_PATH in "${PATHS[@]}"; do
+        FILE_PROMPT="${FILE_PROMPT}"$'\n  * '"$FILE_PATH"
+    done
+
+    # Will exit script on no
+    gum confirm $'You are removing the following SELECTED files, are you sure?\n'"$FILE_PROMPT" || exit 0
+fi
+
+## Delete all of the paths specified
+rm -rf -- "${PATHS[@]}"
+
+echo "deselect all" >> "$CMD_FILE"
+echo "refresh"      >> "$CMD_FILE"

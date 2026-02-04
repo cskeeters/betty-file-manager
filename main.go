@@ -282,7 +282,8 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				// https://github.com/morgant/tools-osx
 				return m, m.TrashFiles()
 			case command == "remove":
-				return m, m.RemoveFiles()
+				return m, m.RunInteractivePlugin(filepath.Join(home, ".config/bfm/plugins/remove"))
+				// return m, m.RemoveFiles()
 
 			// This may be used to force OneDrive to download a file so that it can be opened without error (like in Acrobat)
 			case command == "cat_to_null": // Cat to Null

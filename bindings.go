@@ -177,7 +177,7 @@ func SetDefaultBindings() {
 	SetBinding("R",         "rename")
 	SetBinding("ctrl+r",    "bulk_rename")
 	SetBinding("T",         "trash")
-	SetBinding("X",         "remove")
+	SetBinding("X",         "remove") // This runs interactive plugin: remove
 
 	SetBinding("S",         "shell")
 	SetBinding("V",         "editor")
