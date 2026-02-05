@@ -87,6 +87,8 @@ func (m *model) createCmd() string {
 }
 
 func (m *model) RunPlugin(pluginpath string, args ...string) tea.Cmd {
+	log.Printf("Running Plugin %s", pluginpath)
+
 	statepath := m.writeState()
 	cmdpath := m.createCmd()
 
@@ -120,6 +122,7 @@ func (m *model) RunPlugin(pluginpath string, args ...string) tea.Cmd {
 }
 
 func (m *model) RunInteractivePlugin(pluginpath string, args ...string) tea.Cmd {
+	log.Printf("Running Interactive Plugin %s", pluginpath)
 	statepath := m.writeState()
 	cmdpath := m.createCmd()
 
