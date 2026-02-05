@@ -21,7 +21,7 @@ if [[ "${#PATHS[@]}" -gt 1 ]]; then
 fi
 
 ## Delete all of the paths specified
-rm -rf -- "${PATHS[@]}"
+gum spin --title "Removing Files..." -- rm -rf -- "${PATHS[@]}"
 
 echo "deselect all" >> "$CMD_FILE"
 echo "refresh"      >> "$CMD_FILE"
