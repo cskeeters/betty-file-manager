@@ -32,8 +32,7 @@ if [[ $SELECTED_OPTION =~ $QUALITY_RE ]]; then
 
     mkdir -p compressed
 
-    printf "%s\n" "${PATHS[@]}" | parallel -v 'FPATH={}; magick "$FPATH" -resize "${MAX_LONG_EDGE}x${MAX_LONG_EDGE}>" -quality $JPEG_QUALITY "compressed/${FPATH##*/}"'
-
+    parallel --progress -v 'FPATH={}; magick "$FPATH" -resize "'"${MAX_LONG_EDGE}x${MAX_LONG_EDGE}>"'" -quality '$JPEG_QUALITY' "compressed/${FPATH##*/}"' ::: "${PATHS[@]}"
     STATUS=$?
 
     echo "deselect all" >> "$CMD_FILE"
