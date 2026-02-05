@@ -290,7 +290,7 @@ help    = "Shares the file via email"
 
 [[bindings]]
 key = "s"
-command = "iplugin share_email"
+command = "iplugin share_email" # Must match plugin.command
 ```
 
 
