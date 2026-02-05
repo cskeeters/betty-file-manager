@@ -224,13 +224,13 @@ Operations
 
 # Configuration
 
-The configuration file for bfm is located in `$HOME/.config/bfm/bfmrc` on both Linux and macOS.
+The configuration file for bfm is located in `$HOME/.config/bfm/bfmrc.toml` on both Linux and macOS.
 
 To edit the config file, run the following:
 
 ```sh
 mkdir "$HOME/.config/bfm/plugins"
-vim "$HOME/.config/bfm/bfmrc"
+vim "$HOME/.config/bfm/bfmrc.toml"
 ```
 
 ## KeyBindings

@@ -41,7 +41,7 @@ type Config struct {
 func LoadConfig() {
 	log.Print("Loading Config")
 
-	configPath := filepath.Join(home,".config/bfm/bfmrc")
+	configPath := filepath.Join(home,".config/bfm/bfmrc.toml")
 	if _, err := os.Stat(configPath); err != nil {
 		log.Print("Could not find bfmrc")
 		SetDefaultBindings()
