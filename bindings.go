@@ -67,12 +67,12 @@ func SetDefaultPlugins() {
 
 	config.Plugins = append(config.Plugins, Plugin{
 		Section: "Operations",
-		Command: "plugin compress",
+		Command: "iplugin compress",
 		Help: "Compress file",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
 		Section: "Operations",
-		Command: "plugin uncompress",
+		Command: "iplugin uncompress",
 		Help: "Uncompress (extract) file",
 	})
 	config.Plugins = append(config.Plugins, Plugin{
@@ -183,8 +183,8 @@ func SetDefaultBindings() {
 	SetBinding("V",         "editor")
 	SetBinding("F",         "files")
 
-	SetBinding("C",         "plugin compress")
-	SetBinding("U",         "plugin uncompress")
+	SetBinding("C",         "iplugin compress")
+	SetBinding("U",         "iplugin uncompress")
 	SetBinding("P",         "plugin preview")
 	SetBinding("O",         "plugin acrobat")
 	SetBinding("L",         "plugin quicklook")
