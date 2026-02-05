@@ -39,6 +39,8 @@ if [[ $SELECTED_OPTION =~ $QUALITY_RE ]]; then
     echo "cd $CUR_DIR/compressed" >> $CMD_FILE
     echo "refresh" >> "$CMD_FILE"
 
+    read -s -n 1 -p "Press any key to continue..."
+
     exit $STATUS
 else
     die "Did not select a valid option"
