@@ -13,12 +13,13 @@ tar.bz2
 tar
 EOF)
 
+
 if [[ $TYPE == "tgz" ]]; then
-    tar -zcf "${HOVERED_FILE}.tgz" "$HOVERED_FILE"
+    gum spin --title "Tarring ${HOVERED_FILE} to ${HOVERED_FILE}.tgz" -- tar -zcf "${HOVERED_FILE}.tgz" "$HOVERED_FILE"
 elif [[ $TYPE == "zip" ]]; then
-    zip -r "${HOVERED_FILE}.zip" "$HOVERED_FILE"
+    gum spin --title "Zipping ${HOVERED_FILE} to ${HOVERED_FILE}.zip" -- zip -r "${HOVERED_FILE}.zip" "$HOVERED_FILE"
 elif [[ $TYPE == "tar.bz2" ]]; then
-    tar -jcf "${HOVERED_FILE}.tar.bz2" "$HOVERED_FILE"
+    gum spin --title "Tarring ${HOVERED_FILE} to ${HOVERED_FILE}.tar.bz2" -- tar -jcf "${HOVERED_FILE}.tar.bz2" "$HOVERED_FILE"
 else
     exit 1
 fi

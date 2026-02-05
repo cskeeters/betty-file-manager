@@ -60,31 +60,31 @@ GZ_RE='\.gz$'
 if [[ "$HOVERED_FILE" =~ $TARGZ_RE ]]; then
     # Works in Bash 3.2 (macOS), unlike ${HOVERED_FILE::-4}
     STEM=${HOVERED_FILE%???????}
-    tar -zxf "$HOVERED_FILE" -C "$EXTDIR"
+    gum spin --title "Untarring $HOVERED_FILE" -- tar -zxf "$HOVERED_FILE" -C "$EXTDIR"
     to_sub
 
 elif [[ "$HOVERED_FILE" =~ $TGZ_RE ]]; then
     STEM=${HOVERED_FILE%????}
-    tar -zxf "$HOVERED_FILE" -C "$EXTDIR"
+    gum spin --title "Untarring $HOVERED_FILE" -- tar -zxf "$HOVERED_FILE" -C "$EXTDIR"
     to_sub
 
 elif [[ "$HOVERED_FILE" =~ $TARBZ_RE ]]; then
     STEM=${HOVERED_FILE%????????}
-    tar -jxf "$HOVERED_FILE" -C "$EXTDIR"
+    gum spin --title "Untarring $HOVERED_FILE" -- tar -jxf "$HOVERED_FILE" -C "$EXTDIR"
     to_sub
 
 elif [[ "$HOVERED_FILE" =~ $TAR_RE ]]; then
     STEM=${HOVERED_FILE%????}
-    tar -xf "$HOVERED_FILE" -C "$EXTDIR"
+    gum spin --title "Untarring $HOVERED_FILE" -- tar -xf "$HOVERED_FILE" -C "$EXTDIR"
     to_sub
 
 elif [[ "$HOVERED_FILE" =~ $ZIP_RE ]]; then
     STEM=${HOVERED_FILE%????}
-    unzip -d "$EXTDIR" "$HOVERED_FILE"
+    gum spin --title "Unzipping $HOVERED_FILE" -- unzip -d "$EXTDIR" "$HOVERED_FILE"
     to_sub
 
 elif [[ "$HOVERED_FILE" =~ $GZ_RE ]]; then
-    gunzip "$HOVERED_FILE"
+    gum spin --title "GUnzipping $HOVERED_FILE" -- gunzip "$HOVERED_FILE"
 
 else
     echo "Did not recognize file extension"
