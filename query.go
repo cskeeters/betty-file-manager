@@ -18,9 +18,10 @@ const (
 )
 
 type Term struct {
-	Pattern string
-	Type    termType
-	Inverse bool
+	Pattern       string
+	Type          termType
+	Inverse       bool
+	CaseSensitive bool
 }
 
 type Query struct {
@@ -29,24 +30,26 @@ type Query struct {
 }
 
 func ParseQuery(query string) *Query {
+	// Smart case: case-sensitive if query contains uppercase letters
+	caseSensitive := query != strings.ToLower(query)
 	q := &Query{}
 	if strings.Contains(query, "|") {
 		q.Or = true
 		parts := strings.Split(query, "|")
 		for _, part := range parts {
-			q.Terms = append(q.Terms, parseTerm(strings.TrimSpace(part)))
+			q.Terms = append(q.Terms, parseTerm(strings.TrimSpace(part), caseSensitive))
 		}
 	} else {
 		q.Or = false
 		parts := strings.Fields(query)
 		for _, part := range parts {
-			q.Terms = append(q.Terms, parseTerm(part))
+			q.Terms = append(q.Terms, parseTerm(part, caseSensitive))
 		}
 	}
 	return q
 }
 
-func parseTerm(s string) Term {
+func parseTerm(s string, caseSensitive bool) Term {
 	typ := termFuzzy
 	inv := false
 	if strings.HasPrefix(s, "!") {
@@ -73,7 +76,7 @@ func parseTerm(s string) Term {
 		}
 		s = s[1:]
 	}
-	return Term{Pattern: s, Type: typ, Inverse: inv}
+	return Term{Pattern: s, Type: typ, Inverse: inv, CaseSensitive: caseSensitive}
 }
 
 func (q *Query) Eval(text string) int {
@@ -105,27 +108,31 @@ func (q *Query) evalTerm(term Term, chars *util.Chars) int {
 	if term.Pattern == "" {
 		return 1
 	}
-	pattern := []rune(term.Pattern)
+	pat := term.Pattern
+	if !term.CaseSensitive {
+		pat = strings.ToLower(pat)
+	}
+	pattern := []rune(pat)
 	var res algo.Result
 	var score int
 	switch term.Type {
 	case termExact:
-		res, _ = algo.ExactMatchNaive(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.ExactMatchNaive(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	case termExactBoundary:
-		res, _ = algo.ExactMatchBoundary(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.ExactMatchBoundary(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	case termPrefix:
-		res, _ = algo.PrefixMatch(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.PrefixMatch(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	case termSuffix:
-		res, _ = algo.SuffixMatch(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.SuffixMatch(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	case termEqual:
-		res, _ = algo.EqualMatch(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.EqualMatch(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	default: // termFuzzy
-		res, _ = algo.FuzzyMatchV2(false, true, true, chars, pattern, false, nil)
+		res, _ = algo.FuzzyMatchV2(term.CaseSensitive, true, true, chars, pattern, false, nil)
 		score = res.Score
 	}
 	if term.Inverse {
