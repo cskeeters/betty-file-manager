@@ -191,16 +191,20 @@ func renderModeStatus(mode int) string {
 }
 
 func renderFilter(tab *tabData) string {
-	if tab.filter == "" {
-		return ""
-	}
 	filter := tab.filter
-	if tab.filterCursor < len(filter) {
-		filter = filter[:tab.filterCursor] + "█" + filter[tab.filterCursor:]
-	} else {
-		filter += "█"
+	invertedStyle := lipgloss.NewStyle().Foreground(subtleColor).Background(brightWhiteColor).Italic(true)
+	if filter == "" {
+		return invertedStyle.Render(" ")
 	}
-	return rFilterText(filter)
+	if tab.filterCursor < len(filter) {
+		before := filter[:tab.filterCursor]
+		cursorChar := string(filter[tab.filterCursor])
+		after := filter[tab.filterCursor+1:]
+		filter = rFilterText(before) + invertedStyle.Render(cursorChar) + rFilterText(after)
+	} else {
+		filter = rFilterText(filter) + invertedStyle.Render(" ")
+	}
+	return filter
 }
 
 func renderStats(tab *tabData) string {
@@ -240,7 +244,10 @@ func (m model) footerView() string {
 
 	doc.WriteString("\n")
 	mode := renderModeStatus(m.mode)
-	filter := renderFilter(m.CurrentTab)
+	var filter string
+	if m.mode == filterMode {
+		filter = renderFilter(m.CurrentTab)
+	}
 	stats := renderStats(m.CurrentTab)
 	selStats := m.renderSelectedStatus()
 	sortStatus := m.renderSortStatus()
