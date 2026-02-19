@@ -109,9 +109,6 @@ func (q *Query) evalTerm(term Term, chars *util.Chars) int {
 		return 1
 	}
 	pat := term.Pattern
-	if !term.CaseSensitive {
-		pat = strings.ToLower(pat)
-	}
 	pattern := []rune(pat)
 	var res algo.Result
 	var score int
