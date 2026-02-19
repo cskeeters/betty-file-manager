@@ -200,7 +200,7 @@ func renderFilter(tab *tabData) string {
 	} else {
 		filter += "█"
 	}
-	return rFilterText("»" + filter)
+	return rFilterText(filter)
 }
 
 func renderStats(tab *tabData) string {
