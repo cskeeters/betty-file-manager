@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"log"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -26,6 +25,9 @@ type tabData struct {
 	filteredFiles []fs.DirEntry
 	cursor        int
 	filter        string
+	filterCursor  int
+	filterHistory []string
+	historyIndex  int
 	sort          int
 	showHidden    bool
 
@@ -53,7 +55,6 @@ type model struct {
 	// If an error has occurred, add to this slice and it will present it to the user
 	errors []string
 }
-
 
 func (m *model) getHoveredDirEntry() fs.DirEntry {
 	return m.CurrentTab.filteredFiles[m.CurrentTab.cursor]
@@ -88,7 +89,6 @@ func (m *model) isHoveredDir() bool {
 	return false
 }
 
-
 // Returns the indicies of files selected in the directory of the current tab
 func (m *model) SelectedIndicies() []int {
 	indicies := []int{}
@@ -99,7 +99,6 @@ func (m *model) SelectedIndicies() []int {
 	}
 	return indicies
 }
-
 
 // Adds error message to be shown to the user
 func (m *model) appendError(msg string) {
@@ -137,36 +136,4 @@ func (m *model) Selected(absdir string, file fs.DirEntry) int {
 		}
 	}
 	return -1
-}
-
-func buildPattern(filter string) string {
-	doc := strings.Builder{}
-
-	pre := ""
-	for _, c := range strings.Split(filter, "") {
-		doc.WriteString(pre)
-		doc.WriteString(c)
-		pre = ".*"
-	}
-
-	return doc.String()
-}
-
-// Returns true if the file should be filtered based on the user inputted list of filter patterns (separated by spaces)
-func (td *tabData) filtered(file fs.DirEntry) bool {
-	alllower := IsLower(td.filter)
-	filters := strings.Split(LowerIf(td.filter, alllower), " ")
-	for _, filter := range filters {
-		pattern := buildPattern(filter)
-		matches, err := regexp.MatchString(pattern, LowerIf(file.Name(), alllower))
-		if err != nil {
-			log.Print(err)
-			return false
-		}
-		// If any pattern does not match, filter the file
-		if !matches {
-			return true
-		}
-	}
-	return false
 }

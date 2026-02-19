@@ -5,27 +5,26 @@ import (
 	"io/fs"
 	"log"
 	"path/filepath"
-	"time"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
 const (
-	commandMode = iota
-	filterMode = iota
+	commandMode  = iota
+	filterMode   = iota
 	selectedMode = iota
 )
 
 const (
 	modifiedSort = iota
-	nameSort = iota
-	sizeSort = iota
+	nameSort     = iota
+	sizeSort     = iota
 )
-
 
 func GetModified(f fs.DirEntry) string {
 	info, err := f.Info()
@@ -35,22 +34,22 @@ func GetModified(f fs.DirEntry) string {
 
 	mod := info.ModTime()
 	age := time.Since(mod)
-	years := int(age.Hours()/8640)
+	years := int(age.Hours() / 8640)
 	if years > 0 {
 		return fmt.Sprintf("%dy", years)
 	}
 
-	months := int(age.Hours()/720)
+	months := int(age.Hours() / 720)
 	if months > 0 {
 		return fmt.Sprintf("%dm", months)
 	}
 
-	weeks := int(age.Hours()/168)
+	weeks := int(age.Hours() / 168)
 	if weeks > 0 {
 		return fmt.Sprintf("%dw", weeks)
 	}
 
-	days := int(age.Hours()/24)
+	days := int(age.Hours() / 24)
 	if days > 0 {
 		return fmt.Sprintf("%dd", days)
 	}
@@ -97,16 +96,16 @@ func truncateFileName(name string, maxNameWidth int) string {
 	if dotIndex > 0 {
 		// This is necessary to handle a file name like:
 		// Creative Cloud Files test@gmail.com f9213e08fac784ca5f415c9efe786a51fff4dc45dcdca2e91a3fc6f33fa89b9d
-		if len(name) - dotIndex < 5 {
+		if len(name)-dotIndex < 5 {
 			// put elipsis before file extension
-			end = ellipsis+" "+name[dotIndex:]
+			end = ellipsis + " " + name[dotIndex:]
 			log.Printf("end: %s", end)
 		}
 	}
 
 	startKeepAmt := maxNameWidth - len(end)
 	start := name[0:startKeepAmt]
-	return start+end
+	return start + end
 }
 
 func (m model) View() string {
@@ -125,8 +124,8 @@ func (m model) View() string {
 func compressCWD(path string) string {
 
 	// One simple compression is to use ~ for home dir
-	if strings.HasPrefix(path,home) {
-		path = "~"+path[len(home):]
+	if strings.HasPrefix(path, home) {
+		path = "~" + path[len(home):]
 	}
 
 	// Replace strings specified in bfmrc (to reduce working directory length)
@@ -144,7 +143,7 @@ func (m model) headerView() string {
 	tabs := []string{}
 
 	for i, tab := range m.tabs {
-		tabText := fmt.Sprintf("%d",i+1)
+		tabText := fmt.Sprintf("%d", i+1)
 
 		if i == m.CurrentTabIndex && m.mode == commandMode {
 			tabs = append(tabs, rTabSelected(tabText))
@@ -180,22 +179,28 @@ func (m model) headerView() string {
 }
 
 func renderModeStatus(mode int) string {
-	switch (mode) {
+	switch mode {
 	case commandMode:
-		return rCommand("COMMAND")+riCommand("")
+		return rCommand("COMMAND") + riCommand("")
 	case filterMode:
-		return rFilter("FILTER")+riFilter("")
+		return rFilter("FILTER") + riFilter("")
 	case selectedMode:
-		return rFilter("SELECTED")+riFilter("")
+		return rFilter("SELECTED") + riFilter("")
 	}
 	return ""
 }
 
-func renderFilter(filter string) string {
-	if filter == "" {
+func renderFilter(tab *tabData) string {
+	if tab.filter == "" {
 		return ""
 	}
-	return rFilterText("»"+filter)
+	filter := tab.filter
+	if tab.filterCursor < len(filter) {
+		filter = filter[:tab.filterCursor] + "█" + filter[tab.filterCursor:]
+	} else {
+		filter += "█"
+	}
+	return rFilterText("»" + filter)
 }
 
 func renderStats(tab *tabData) string {
@@ -235,7 +240,7 @@ func (m model) footerView() string {
 
 	doc.WriteString("\n")
 	mode := renderModeStatus(m.mode)
-	filter := renderFilter(m.CurrentTab.filter)
+	filter := renderFilter(m.CurrentTab)
 	stats := renderStats(m.CurrentTab)
 	selStats := m.renderSelectedStatus()
 	sortStatus := m.renderSortStatus()
@@ -260,11 +265,9 @@ func (m model) footerView() string {
 		help,
 	)
 
-
 	doc.WriteString(footer)
 	return doc.String()
 }
-
 
 // Populates the viewport with data from the current tab
 // Indicates which files are selected
@@ -318,17 +321,17 @@ func (m *model) generateContent() string {
 			fileStyle = directory
 		} else if isSymDir(ct.absdir, f) {
 			fileStyle = symDirectory
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xlsx") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".xlsx") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xls") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".xls") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".xlsm") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".xlsm") {
 			fileStyle = excel
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".docx") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".docx") {
 			fileStyle = wordDoc
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".doc") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".doc") {
 			fileStyle = wordDoc
-		} else if strings.HasSuffix(strings.ToLower(f.Name()),".pdf") {
+		} else if strings.HasSuffix(strings.ToLower(f.Name()), ".pdf") {
 			fileStyle = pdf
 		}
 
@@ -370,7 +373,7 @@ func (m *model) generateContent() string {
 		doc.WriteString(fileStyle.Render(text))
 		if full {
 			doc.WriteString(spaceStyle.Render(space))
-			doc.WriteString(modStyle.Render(fmt.Sprintf(" %5s", mod))) // 6 characters
+			doc.WriteString(modStyle.Render(fmt.Sprintf(" %5s", mod)))  // 6 characters
 			doc.WriteString(sizeStyle.Render(fmt.Sprintf(" %5s", siz))) // 6 characters
 		}
 		doc.WriteString("\n")
@@ -383,17 +386,17 @@ func (m *model) generateSelected() string {
 	doc := strings.Builder{}
 
 	sort.Slice(m.selectedFiles, func(i, j int) bool {
-		if (m.selectedFiles[i].directory < m.selectedFiles[j].directory) {
+		if m.selectedFiles[i].directory < m.selectedFiles[j].directory {
 			return true
 		}
-		if (m.selectedFiles[i].directory > m.selectedFiles[j].directory) {
+		if m.selectedFiles[i].directory > m.selectedFiles[j].directory {
 			return false
 		}
 		return m.selectedFiles[i].file.Name() < m.selectedFiles[j].file.Name()
 	})
 
-	for _, sf := range(m.selectedFiles) {
-		doc.WriteString("  "+filepath.Join(sf.directory,sf.file.Name())+"\n")
+	for _, sf := range m.selectedFiles {
+		doc.WriteString("  " + filepath.Join(sf.directory, sf.file.Name()) + "\n")
 	}
 
 	return doc.String()

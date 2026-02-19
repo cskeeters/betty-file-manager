@@ -3,10 +3,12 @@ package main
 // See notes/file-manager-requirements
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"regexp"
@@ -21,6 +23,11 @@ import (
 var version = "undefined"
 
 type panicMsg error
+type fzfFinishedMsg struct {
+	selected string
+	success  bool
+	errorMsg string
+}
 
 var helpPath string
 var home string
@@ -37,10 +44,6 @@ func ClearLastd() {
 	lastdpath := filepath.Join(home, ".local", "state", "bfm.lastd")
 	if _, err := os.Stat(lastdpath); errors.Is(err, os.ErrNotExist) {
 		return
-	}
-	err := os.Remove(lastdpath)
-	if err != nil {
-		log.Print("Error removing bfm.lastd: " + err.Error())
 	}
 }
 
@@ -80,6 +83,20 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case userErrorMsg:
 		m.appendError(string(msg))
+
+	case fzfFinishedMsg:
+		ct := m.CurrentTab
+		if msg.success {
+			ct.filter = msg.selected
+			ct.filterCursor = len(ct.filter)
+			ct.historyIndex = -1
+			ct.ReRunFilter()
+			m.viewport.SetContent(m.generateContent())
+			m.viewport.GotoTop()
+		} else if msg.errorMsg != "" {
+			m.appendError(msg.errorMsg)
+		}
+		return m, nil
 
 	case selectFileMsg:
 		ct.JumpToFile(string(msg))
@@ -131,13 +148,12 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		// Having errors is like it's own mode
-		// Any key will clear one error
 		if len(m.errors) > 0 {
 			// trash first error
 			m.errors = m.errors[1:]
 
 			return m, refresh()
+
 		}
 
 		if m.mode == commandMode {
@@ -175,6 +191,8 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			// Filtering
 			case command == "filter":
 				m.mode = filterMode
+				ct.filterCursor = len(ct.filter)
+				ct.historyIndex = -1
 				return m, nil
 
 			case command == "refresh":
@@ -335,29 +353,131 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.mode == filterMode {
-			if msg.String() == "esc" {
+			switch msg.String() {
+			case "esc":
 				ct.SetFilter("")
 				m.mode = commandMode
-			} else if msg.String() == "backspace" {
-				if len(ct.filter) > 0 {
-					ct.SetFilter(ct.filter[:len(ct.filter)-1])
+			case "enter":
+				if ct.filter != "" {
+					addToFilterHistory(ct, ct.filter)
 				}
-			} else if msg.String() == "enter" {
 				m.mode = commandMode
-			} else if msg.String() == "ctrl+l" {
-				ct.SetFilter("")
-			} else if msg.String() == "ctrl+w" {
-				filter := strings.TrimRight(ct.filter, " ")
-				i := strings.LastIndex(filter, " ")
-
-				if i == -1 {
-					ct.SetFilter("")
-				} else {
-					ct.SetFilter(ct.filter[:i+1])
+			case "ctrl+l":
+				ct.filter = ""
+				ct.filterCursor = 0
+				ct.historyIndex = -1
+			case "backspace", "ctrl+h":
+				if ct.filterCursor > 0 {
+					ct.filter = deleteAt(ct.filter, ct.filterCursor-1)
+					ct.filterCursor--
+					ct.historyIndex = -1
 				}
-			} else {
-				ct.SetFilter(ct.filter + msg.String())
+			case "delete", "ctrl+d":
+				if ct.filterCursor < len(ct.filter) {
+					ct.filter = deleteAt(ct.filter, ct.filterCursor)
+					ct.historyIndex = -1
+				}
+			case "left", "ctrl+b":
+				if ct.filterCursor > 0 {
+					ct.filterCursor--
+				}
+			case "right", "ctrl+f":
+				if ct.filterCursor < len(ct.filter) {
+					ct.filterCursor++
+				}
+			case "home", "ctrl+a":
+				ct.filterCursor = 0
+			case "end", "ctrl+e":
+				ct.filterCursor = len(ct.filter)
+			case "alt+b":
+				ct.filterCursor = findWordBoundary(ct.filter, ct.filterCursor, true)
+			case "alt+f":
+				ct.filterCursor = findWordBoundary(ct.filter, ct.filterCursor, false)
+			case "ctrl+w", "alt+backspace":
+				if ct.filterCursor > 0 {
+					newPos := findWordBoundary(ct.filter, ct.filterCursor, true)
+					ct.filter = ct.filter[:newPos] + ct.filter[ct.filterCursor:]
+					ct.filterCursor = newPos
+					ct.historyIndex = -1
+				}
+			case "ctrl+k", "alt+k":
+				ct.filter = ct.filter[:ct.filterCursor]
+				ct.historyIndex = -1
+			case "ctrl+u":
+				ct.filter = ct.filter[ct.filterCursor:]
+				ct.filterCursor = 0
+				ct.historyIndex = -1
+			case "up", "ctrl+p":
+				if len(ct.filterHistory) > 0 {
+					if ct.historyIndex == -1 {
+						ct.historyIndex = len(ct.filterHistory) - 1
+					} else if ct.historyIndex > 0 {
+						ct.historyIndex--
+					}
+					ct.filter = ct.filterHistory[ct.historyIndex]
+					ct.filterCursor = len(ct.filter)
+				}
+			case "down", "ctrl+n":
+				if ct.historyIndex >= 0 {
+					ct.historyIndex++
+					if ct.historyIndex >= len(ct.filterHistory) {
+						ct.filter = ""
+						ct.historyIndex = -1
+					} else {
+						ct.filter = ct.filterHistory[ct.historyIndex]
+					}
+					ct.filterCursor = len(ct.filter)
+				}
+			case "ctrl+r":
+				if len(ct.filterHistory) > 0 {
+					historyStr := strings.Join(ct.filterHistory, "\n")
+					cmd := exec.Command("fzf")
+					cmd.Stdin = strings.NewReader(historyStr)
+					var buf bytes.Buffer
+					cmd.Stdout = &buf
+					return m, tea.ExecProcess(cmd, func(err error) tea.Msg {
+						var selected string
+						var success bool
+						var errorMsg string
+						if err != nil {
+							if exitErr, ok := err.(*exec.ExitError); ok {
+								code := exitErr.ExitCode()
+								if code == 0 {
+									selected = strings.TrimSpace(buf.String())
+									if selected != "" {
+										success = true
+									} else {
+										errorMsg = "fzf returned empty selection"
+									}
+								} else if code == 130 || code == 1 {
+									// cancellation, no error
+									success = false
+								} else {
+									errorMsg = fmt.Sprintf("fzf failed with code %d: %v", code, err)
+								}
+							} else {
+								errorMsg = fmt.Sprintf("fzf error: %v", err)
+							}
+						} else {
+							selected = strings.TrimSpace(buf.String())
+							if selected != "" {
+								success = true
+							} else {
+								errorMsg = "fzf returned empty selection"
+							}
+						}
+						return fzfFinishedMsg{selected: selected, success: success, errorMsg: errorMsg}
+					})
+				}
+			default:
+				// Insert character
+				if len(msg.String()) == 1 && msg.String()[0] >= 32 {
+					ct.filter = insertAt(ct.filter, ct.filterCursor, rune(msg.String()[0]))
+					ct.filterCursor++
+					ct.historyIndex = -1
+				}
 			}
+			ct.ReRunFilter()
 			m.viewport.GotoTop()
 			m.viewport.SetContent(m.generateContent())
 		}
@@ -407,7 +527,6 @@ func (m model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	return m, nil
 }
-
 
 func getStartDir(args []string) string {
 	curDir, err := filepath.Abs(".")

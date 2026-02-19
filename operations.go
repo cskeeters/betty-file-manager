@@ -17,7 +17,6 @@ import (
 type selectFileMsg string
 type tabMsg int
 
-
 func (m model) Init() tea.Cmd {
 	return tea.EnterAltScreen
 }
@@ -33,7 +32,6 @@ func selectFile(name string) tea.Cmd {
 		return selectFileMsg(name)
 	}
 }
-
 
 func (m *model) CloseTab() tea.Cmd {
 	ct := m.CurrentTab
@@ -63,6 +61,8 @@ func (m *model) CloseTab() tea.Cmd {
 func (m *model) SelectTab(tabIndex int) bool {
 	wasActive := m.tabs[tabIndex].active
 	m.tabs[tabIndex].active = true
+	m.tabs[tabIndex].filterHistory = append(m.tabs[tabIndex].filterHistory, "util")
+	m.tabs[tabIndex].filterHistory = append(m.tabs[tabIndex].filterHistory, "file")
 	m.CurrentTabIndex = tabIndex
 	m.CurrentTab = &m.tabs[tabIndex]
 	m.tabHistory = append(m.tabHistory, tabIndex)
@@ -234,17 +234,27 @@ func (m *model) MovePrevSelected() {
 
 func (td *tabData) filterFiles() {
 	td.filteredFiles = []fs.DirEntry{}
+	var candidates []string
 	for _, f := range td.files {
-		// Skip hidden files if showHidden is false
-		if !td.showHidden && strings.HasPrefix(f.Name(), ".") {
-			continue
+		if td.showHidden || !strings.HasPrefix(f.Name(), ".") {
+			candidates = append(candidates, f.Name())
 		}
+	}
 
-		if td.filter == "" {
-			td.filteredFiles = append(td.filteredFiles, f)
-		} else {
-			if !td.filtered(f) {
-				td.filteredFiles = append(td.filteredFiles, f)
+	nameToEntry := make(map[string]fs.DirEntry)
+	for _, f := range td.files {
+		nameToEntry[f.Name()] = f
+	}
+
+	if td.filter == "" {
+		for _, name := range candidates {
+			td.filteredFiles = append(td.filteredFiles, nameToEntry[name])
+		}
+	} else {
+		parsedQuery := ParseQuery(td.filter)
+		for _, name := range candidates {
+			if parsedQuery.Eval(name) > 0 {
+				td.filteredFiles = append(td.filteredFiles, nameToEntry[name])
 			}
 		}
 	}
@@ -273,7 +283,6 @@ func (td *tabData) ReRunFilter() {
 func (m *model) Select(absdir string, file fs.DirEntry) {
 	m.selectedFiles = append(m.selectedFiles, selectedFile{directory: absdir, file: file})
 }
-
 
 func (m *model) ClearSelections() {
 	m.selectedFiles = []selectedFile{}
@@ -320,3 +329,53 @@ func (m *model) ToggleSelected() {
 	}
 }
 
+// Helper functions for filter editing
+
+func insertAt(s string, pos int, r rune) string {
+	if pos < 0 || pos > len(s) {
+		return s
+	}
+	return s[:pos] + string(r) + s[pos:]
+}
+
+func deleteAt(s string, pos int) string {
+	if pos < 0 || pos >= len(s) {
+		return s
+	}
+	return s[:pos] + s[pos+1:]
+}
+
+func findWordBoundary(s string, pos int, backward bool) int {
+	if backward {
+		// Find start of current word or previous word
+		i := pos - 1
+		for i >= 0 && s[i] == ' ' {
+			i--
+		}
+		for i >= 0 && s[i] != ' ' {
+			i--
+		}
+		return i + 1
+	} else {
+		// Find end of current word or next word
+		i := pos
+		for i < len(s) && s[i] == ' ' {
+			i++
+		}
+		for i < len(s) && s[i] != ' ' {
+			i++
+		}
+		return i
+	}
+}
+
+func addToFilterHistory(ct *tabData, filter string) {
+	if filter == "" {
+		return
+	}
+	// Avoid duplicates
+	if len(ct.filterHistory) > 0 && ct.filterHistory[len(ct.filterHistory)-1] == filter {
+		return
+	}
+	ct.filterHistory = append(ct.filterHistory, filter)
+}
