@@ -44,7 +44,7 @@ to_sub() {
 # Ask BFM to refresh no matter what
 echo "refresh" >> "$CMD_FILE"
 
-cd $CUR_DIR
+cd "$CUR_DIR"
 
 # Extract everything to a TMP dir and see if there is a containing folder
 EXTDIR=$(mktemp -d) || die "Error creating temp directory for extraction"
