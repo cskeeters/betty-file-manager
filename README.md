@@ -298,17 +298,21 @@ command = "iplugin share_email" # Must match plugin.command
 
 bfm has a simple plugin mechanism.  The plugin file is run with two arguments that are both paths to temporary files for interaction with `bfm`.
 
-The first path is to the *command* file.  They plugin may write any of the commands bellow to ask bfm to perform the associated actions.
+    plugin_cmd <STATE_FILE> <CMD_FILE>
+
+The state file is a text file that has the directory of the current tab, followed by the full path of all the selected files, or the full path of the hovered file if no files are selected.
+
+`helper.sh` will assign `HOVERED_PATH` and `HOVERED_FILE` from the first path specified.  If the plugin only works with one file, this simplifies handling.
+
+The second path is to the *command* file.  They plugin may write any of the commands bellow to ask bfm to perform the associated actions.
 
 | Command          | Action                                               |
 |------------------|------------------------------------------------------|
 | `cd <path>`      | Changes the directory of the current tab to `<path>` |
 | `deselect all`   | Deselects all selected files                         |
 | `refresh`        | Refreshes the current tab                            |
-| `select <path>` | Selects the file or directory specified by `<path>`  |
+| `select <path>`  | Selects the file or directory specified by `<path>`  |
 
-
-The second path passed to the plugin is the *state* file.  The state file is a text file that has the current directory of the current tab, followed by the full path of all the selected files, or the full path of the hovered file if no files are selected.
 
 ### Bash Plugins
 
